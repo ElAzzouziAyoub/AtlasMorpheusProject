@@ -1,0 +1,20 @@
+# Environment mapping for PROD
+# Maps logical names (used in YAML files) to real IDs in the PROD Morpheus instance.
+# Fill in the real IDs once you have API access.
+
+environment: prod
+morpheus_url: "${MORPHEUS_URL}"   # Set via .env
+
+clouds:
+  DEV-Nutanix: 1
+  TEST-VMware: 3
+  PROD-VMware: 3
+
+networks:
+  DEV-VLAN-100: 11        # Maps to PROD-VLAN-300 in this environment
+  TEST-VLAN-200: 11
+  PROD-VLAN-300: 11
+
+plans:
+  plan-10: 8
+  plan-12: 10

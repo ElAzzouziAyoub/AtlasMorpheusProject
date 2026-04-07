@@ -1,0 +1,6 @@
+requests==2.31.0
+PyYAML==6.0.1
+flask==3.0.3
+deepdiff==6.7.1
+pytest==8.1.1
+python-dotenv==1.0.1

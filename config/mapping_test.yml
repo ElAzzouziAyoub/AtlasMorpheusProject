@@ -1,0 +1,20 @@
+# Environment mapping for TEST
+# Maps logical names (used in YAML files) to real IDs in the TEST Morpheus instance.
+# Fill in the real IDs once you have API access.
+
+environment: test
+morpheus_url: "${MORPHEUS_URL}"   # Set via .env
+
+clouds:
+  DEV-Nutanix: 1          # The equivalent cloud in TEST Morpheus (different IDs!)
+  TEST-VMware: 2
+  PROD-VMware: 3
+
+networks:
+  DEV-VLAN-100: 5         # DEV network maps to TEST-VLAN-200 in this environment
+  TEST-VLAN-200: 5
+  PROD-VLAN-300: 9
+
+plans:
+  plan-10: 4
+  plan-12: 6

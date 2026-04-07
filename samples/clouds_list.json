@@ -1,0 +1,37 @@
+{
+  "zones": [
+    {
+      "id": 3,
+      "name": "DEV-Nutanix",
+      "code": "nutanix",
+      "zoneType": {
+        "id": 5,
+        "name": "Nutanix Prism"
+      }
+    },
+    {
+      "id": 7,
+      "name": "TEST-VMware",
+      "code": "vmware",
+      "zoneType": {
+        "id": 2,
+        "name": "VMware vCenter"
+      }
+    },
+    {
+      "id": 12,
+      "name": "PROD-VMware",
+      "code": "vmware",
+      "zoneType": {
+        "id": 2,
+        "name": "VMware vCenter"
+      }
+    }
+  ],
+  "meta": {
+    "offset": 0,
+    "max": 25,
+    "size": 3,
+    "total": 3
+  }
+}

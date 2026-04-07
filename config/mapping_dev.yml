@@ -1,0 +1,21 @@
+# Environment mapping for DEV
+# Maps logical names (used in YAML files) to real IDs in the DEV Morpheus instance.
+# Fill in the real IDs once you have API access.
+
+environment: dev
+morpheus_url: "${MORPHEUS_URL}"   # Set via .env
+
+clouds:
+  DEV-Nutanix: 3          # Real cloud ID in DEV Morpheus
+  TEST-VMware: 7          # (placeholder — update with real values)
+  PROD-VMware: 12
+
+networks:
+  DEV-VLAN-100: 17        # Real network ID in DEV Morpheus
+  TEST-VLAN-200: 23
+  PROD-VLAN-300: 31
+
+# Service plans: map logical names to plan IDs in this environment
+plans:
+  plan-10: 10             # e.g. 2vCPU 4GB
+  plan-12: 12             # e.g. 4vCPU 8GB

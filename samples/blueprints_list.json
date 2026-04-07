@@ -1,0 +1,106 @@
+{
+  "blueprints": [
+    {
+      "id": 1,
+      "name": "ubuntu-web-server",
+      "type": "morpheus",
+      "description": "Standard Ubuntu 22.04 web server blueprint",
+      "config": {
+        "name": "ubuntu-web-server",
+        "type": "morpheus",
+        "tiers": {
+          "App": {
+            "linkedTiers": [],
+            "tierIndex": 1,
+            "instances": [
+              {
+                "instance": {
+                  "type": "ubuntu",
+                  "name": "${userInitials}-ubuntu-${sequence}",
+                  "instanceContext": "production"
+                },
+                "cloudId": 3,
+                "networkInterfaces": [
+                  {
+                    "network": {
+                      "id": "network-17"
+                    }
+                  }
+                ],
+                "volumes": [
+                  {
+                    "rootVolume": true,
+                    "name": "root",
+                    "size": 20,
+                    "storageType": 1
+                  }
+                ],
+                "plan": {
+                  "id": 12
+                }
+              }
+            ]
+          }
+        }
+      },
+      "visibility": "private",
+      "resourcePermission": {
+        "all": true
+      },
+      "owner": {
+        "id": 1,
+        "username": "admin"
+      },
+      "dateCreated": "2024-01-15T09:00:00Z",
+      "lastUpdated": "2024-03-10T14:30:00Z"
+    },
+    {
+      "id": 2,
+      "name": "nginx-lb",
+      "type": "morpheus",
+      "description": "NGINX load balancer blueprint",
+      "config": {
+        "name": "nginx-lb",
+        "type": "morpheus",
+        "tiers": {
+          "LB": {
+            "linkedTiers": [],
+            "tierIndex": 1,
+            "instances": [
+              {
+                "instance": {
+                  "type": "nginx",
+                  "name": "${userInitials}-nginx-${sequence}"
+                },
+                "cloudId": 3,
+                "networkInterfaces": [
+                  {
+                    "network": {
+                      "id": "network-17"
+                    }
+                  }
+                ],
+                "plan": {
+                  "id": 10
+                }
+              }
+            ]
+          }
+        }
+      },
+      "visibility": "private",
+      "owner": {
+        "id": 1,
+        "username": "admin"
+      },
+      "dateCreated": "2024-02-01T10:00:00Z",
+      "lastUpdated": "2024-03-12T11:00:00Z"
+    }
+  ],
+  "meta": {
+    "offset": 0,
+    "max": 25,
+    "size": 2,
+    "total": 2
+  }
+}

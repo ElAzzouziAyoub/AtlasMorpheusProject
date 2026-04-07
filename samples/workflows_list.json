@@ -1,0 +1,62 @@
+{
+  "taskSets": [
+    {
+      "id": 5,
+      "name": "provision-web-server",
+      "description": "Post-provision setup for web servers",
+      "type": "provision",
+      "tasks": [
+        {
+          "id": 101,
+          "name": "install-nginx",
+          "taskType": {
+            "id": 1,
+            "name": "Shell Script"
+          },
+          "executeTarget": "resource",
+          "order": 1
+        },
+        {
+          "id": 102,
+          "name": "configure-firewall",
+          "taskType": {
+            "id": 1,
+            "name": "Shell Script"
+          },
+          "executeTarget": "resource",
+          "order": 2
+        }
+      ],
+      "visibility": "private",
+      "dateCreated": "2024-01-20T08:00:00Z",
+      "lastUpdated": "2024-03-01T09:00:00Z"
+    },
+    {
+      "id": 6,
+      "name": "decommission-cleanup",
+      "description": "Cleanup tasks on instance teardown",
+      "type": "teardown",
+      "tasks": [
+        {
+          "id": 103,
+          "name": "backup-data",
+          "taskType": {
+            "id": 1,
+            "name": "Shell Script"
+          },
+          "executeTarget": "resource",
+          "order": 1
+        }
+      ],
+      "visibility": "private",
+      "dateCreated": "2024-02-10T08:00:00Z",
+      "lastUpdated": "2024-03-05T09:00:00Z"
+    }
+  ],
+  "meta": {
+    "offset": 0,
+    "max": 25,
+    "size": 2,
+    "total": 2
+  }
+}

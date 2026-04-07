@@ -1,0 +1,40 @@
+{
+  "networks": [
+    {
+      "id": 17,
+      "name": "DEV-VLAN-100",
+      "displayName": "Dev Network",
+      "cidr": "10.0.100.0/24",
+      "zone": {
+        "id": 3,
+        "name": "DEV-Nutanix"
+      }
+    },
+    {
+      "id": 23,
+      "name": "TEST-VLAN-200",
+      "displayName": "Test Network",
+      "cidr": "10.0.200.0/24",
+      "zone": {
+        "id": 7,
+        "name": "TEST-VMware"
+      }
+    },
+    {
+      "id": 31,
+      "name": "PROD-VLAN-300",
+      "displayName": "Prod Network",
+      "cidr": "10.10.0.0/24",
+      "zone": {
+        "id": 12,
+        "name": "PROD-VMware"
+      }
+    }
+  ],
+  "meta": {
+    "offset": 0,
+    "max": 25,
+    "size": 3,
+    "total": 3
+  }
+}
