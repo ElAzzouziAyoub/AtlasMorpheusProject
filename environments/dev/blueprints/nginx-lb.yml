@@ -1,0 +1,22 @@
+config:
+  name: nginx-lb
+  tiers:
+    LB:
+      instances:
+      - instance:
+          name: ${userInitials}-nginx-${sequence}
+          type: nginx
+        networkInterfaces:
+        - network:
+            name: DEV-VLAN-100
+        plan:
+          id: 10
+          _logical_name: plan-10
+        cloudName: DEV-Nutanix
+      linkedTiers: []
+      tierIndex: 1
+  type: morpheus
+description: NGINX load balancer blueprint
+name: nginx-lb
+type: morpheus
+visibility: private

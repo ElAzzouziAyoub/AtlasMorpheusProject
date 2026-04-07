@@ -9,7 +9,9 @@ import os
 import requests
 from dotenv import load_dotenv
 
-load_dotenv()
+# Always load .env from the project root, regardless of where the script is called from.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(dotenv_path=os.path.join(_REPO_ROOT, ".env"), override=True)
 
 
 def _base_url() -> str:

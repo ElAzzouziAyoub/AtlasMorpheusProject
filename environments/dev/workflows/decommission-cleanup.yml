@@ -1,0 +1,10 @@
+description: Cleanup tasks on instance teardown
+name: decommission-cleanup
+tasks:
+- executeTarget: resource
+  name: backup-data
+  order: 1
+  taskType:
+    name: Shell Script
+type: teardown
+visibility: private
