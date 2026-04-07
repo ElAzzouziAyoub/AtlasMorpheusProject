@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "Bash(mkdir -p environments/dev environments/test environments/prod scripts samples mock_server tests)",
+      "Bash(git branch:*)"
+    ]
+  }
+}
