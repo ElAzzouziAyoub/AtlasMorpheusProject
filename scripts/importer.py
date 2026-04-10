@@ -123,13 +123,29 @@ def _import_blueprints(env: str, in_dir: str, mapping: dict, dry_run: bool):
         print("  No blueprints directory found, skipping.")
         return
 
-    # Build index of existing blueprints by name for upsert logic
-    existing = {bp["name"]: bp for bp in client.list_blueprints()}
-
     yml_files = [f for f in os.listdir(bp_dir) if f.endswith(".yml")]
     print(f"  Found {len(yml_files)} blueprint file(s)")
 
-    stats = {"created": 0, "updated": 0, "dry-run": 0, "errors": 0}
+    # In dry-run mode we only validate YAML + mappings — no API calls.
+    if dry_run:
+        errors = 0
+        for fname in yml_files:
+            fpath = os.path.join(bp_dir, fname)
+            with open(fpath) as f:
+                bp = yaml.safe_load(f)
+            try:
+                _remap_blueprint(bp, mapping)
+                print(f"    [dry-run] ok: {bp.get('name', fname)}")
+            except (ValueError, KeyError) as exc:
+                print(f"    [dry-run] ERROR in {fname}: {exc}")
+                errors += 1
+        if errors:
+            sys.exit(1)
+        return
+
+    # Real import: fetch existing objects for upsert logic.
+    existing = {bp["name"]: bp for bp in client.list_blueprints()}
+    stats = {"created": 0, "updated": 0, "errors": 0}
 
     for fname in yml_files:
         fpath = os.path.join(bp_dir, fname)
@@ -138,10 +154,9 @@ def _import_blueprints(env: str, in_dir: str, mapping: dict, dry_run: bool):
 
         try:
             remapped = _remap_blueprint(bp, mapping)
-            result = _upsert_blueprint(remapped, existing, dry_run)
+            result = _upsert_blueprint(remapped, existing, dry_run=False)
             stats[result] += 1
-            name = bp.get("name", fname)
-            print(f"    {result}: {name}")
+            print(f"    {result}: {bp.get('name', fname)}")
         except (ValueError, KeyError) as exc:
             print(f"    ERROR in {fname}: {exc}")
             stats["errors"] += 1
@@ -155,21 +170,26 @@ def _import_workflows(env: str, in_dir: str, dry_run: bool):
         print("  No workflows directory found, skipping.")
         return
 
-    existing = {wf["name"]: wf for wf in client.list_workflows()}
     yml_files = [f for f in os.listdir(wf_dir) if f.endswith(".yml")]
     print(f"  Found {len(yml_files)} workflow file(s)")
 
+    # In dry-run mode: just confirm YAML parses — no API calls.
+    if dry_run:
+        for fname in yml_files:
+            fpath = os.path.join(wf_dir, fname)
+            with open(fpath) as f:
+                wf = yaml.safe_load(f)
+            print(f"    [dry-run] ok: {wf.get('name', fname)}")
+        return
+
+    # Real import.
+    existing = {wf["name"]: wf for wf in client.list_workflows()}
     for fname in yml_files:
         fpath = os.path.join(wf_dir, fname)
         with open(fpath) as f:
             wf = yaml.safe_load(f)
 
         name = wf.get("name", fname)
-        if dry_run:
-            action = "would update" if name in existing else "would create"
-            print(f"    [dry-run] {action}: {name}")
-            continue
-
         if name in existing:
             wf_id = existing[name]["id"]
             client.update_workflow(wf_id, wf)
