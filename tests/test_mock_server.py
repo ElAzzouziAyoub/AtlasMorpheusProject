@@ -5,9 +5,16 @@ Starts the mock app in test mode and calls its endpoints.
 
 import json
 import pytest
+import mock_server.app as mock_app
 from mock_server.app import app
 
 HEADERS = {"Authorization": "Bearer mock-token-dev"}
+
+
+@pytest.fixture(autouse=True)
+def reset_store():
+    """Reset in-memory store before each test so tests are independent."""
+    mock_app._store = {k: None for k in mock_app._store}
 
 
 @pytest.fixture

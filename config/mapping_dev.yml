@@ -3,7 +3,6 @@
 # Fill in the real IDs once you have API access.
 
 environment: dev
-morpheus_url: "${MORPHEUS_URL}"   # Set via .env
 
 clouds:
   DEV-Nutanix: 3          # Real cloud ID in DEV Morpheus

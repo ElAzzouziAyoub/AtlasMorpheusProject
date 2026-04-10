@@ -171,8 +171,9 @@ def _import_workflows(env: str, in_dir: str, dry_run: bool):
             continue
 
         if name in existing:
-            # Workflows don't have a generic update in this mock; extend as needed
-            print(f"    skipped (already exists): {name}")
+            wf_id = existing[name]["id"]
+            client.update_workflow(wf_id, wf)
+            print(f"    updated: {name}")
         else:
             client.create_workflow(wf)
             print(f"    created: {name}")

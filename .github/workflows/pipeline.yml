@@ -1,0 +1,150 @@
+# GitHub Actions Pipeline — ATLAS GitOps for Morpheus
+#
+# Stages:
+#   validate  → lint YAML files and run tests on every push
+#   deploy    → import to TEST (on push to `test` branch)
+#   promote   → import to PROD (on push to `main`, requires manual approval)
+#   drift     → scheduled daily job that detects config drift in DEV
+#
+# Required GitHub Secrets (Settings → Secrets and variables → Actions):
+#   MORPHEUS_TOKEN_DEV    — API token for DEV Morpheus
+#   MORPHEUS_TOKEN_TEST   — API token for TEST Morpheus
+#   MORPHEUS_TOKEN_PROD   — API token for PROD Morpheus
+#   MORPHEUS_URL_DEV      — Base URL of DEV Morpheus
+#   MORPHEUS_URL_TEST     — Base URL of TEST Morpheus
+#   MORPHEUS_URL_PROD     — Base URL of PROD Morpheus
+
+name: ATLAS GitOps Pipeline
+
+on:
+  push:
+    branches: ["**"]
+  schedule:
+    - cron: "0 6 * * *"   # Daily at 06:00 UTC — drift detection
+  workflow_dispatch:        # Allow manual runs from the GitHub UI
+
+defaults:
+  run:
+    shell: bash
+
+# ---------------------------------------------------------------------------
+# VALIDATE — runs on every push to any branch
+# ---------------------------------------------------------------------------
+
+jobs:
+  validate-yaml:
+    name: Validate YAML files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q -r requirements.txt
+      - name: Check all environment YAML files parse correctly
+        run: |
+          python -c "
+          import yaml, os, sys
+          errors = []
+          for root, dirs, files in os.walk('environments'):
+              for f in files:
+                  if f.endswith('.yml'):
+                      path = os.path.join(root, f)
+                      try:
+                          yaml.safe_load(open(path))
+                      except yaml.YAMLError as e:
+                          errors.append(f'{path}: {e}')
+          if errors:
+              print('YAML validation failed:')
+              [print(e) for e in errors]
+              sys.exit(1)
+          print('All YAML files are valid.')
+          "
+
+  tests:
+    name: Run test suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q -r requirements.txt
+      - run: pytest tests/ -v
+
+# ---------------------------------------------------------------------------
+# DEPLOY TO TEST — triggers on push to `test` branch
+# ---------------------------------------------------------------------------
+
+  deploy-test:
+    name: Deploy to TEST
+    needs: [validate-yaml, tests]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/test' && github.event_name == 'push'
+    environment:
+      name: test
+      url: ${{ secrets.MORPHEUS_URL_TEST }}
+    env:
+      MORPHEUS_URL: ${{ secrets.MORPHEUS_URL_TEST }}
+      MORPHEUS_TOKEN: ${{ secrets.MORPHEUS_TOKEN_TEST }}
+      MORPHEUS_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q -r requirements.txt
+      - name: Dry-run (validate mappings)
+        run: python scripts/importer.py --env test --dry-run
+      - name: Deploy
+        run: python scripts/importer.py --env test
+
+# ---------------------------------------------------------------------------
+# PROMOTE TO PROD — triggers on push to `main`, requires manual approval
+# (configure a "production" environment with required reviewers in GitHub:
+#  Settings → Environments → production → Required reviewers)
+# ---------------------------------------------------------------------------
+
+  promote-prod:
+    name: Promote to PROD
+    needs: [validate-yaml, tests]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: ${{ secrets.MORPHEUS_URL_PROD }}
+    env:
+      MORPHEUS_URL: ${{ secrets.MORPHEUS_URL_PROD }}
+      MORPHEUS_TOKEN: ${{ secrets.MORPHEUS_TOKEN_PROD }}
+      MORPHEUS_ENV: prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q -r requirements.txt
+      - name: Dry-run (validate mappings)
+        run: python scripts/importer.py --env prod --dry-run
+      - name: Promote
+        run: python scripts/importer.py --env prod
+
+# ---------------------------------------------------------------------------
+# DRIFT DETECTION — runs on schedule (daily at 06:00 UTC)
+# ---------------------------------------------------------------------------
+
+  drift-detect:
+    name: Drift detection (DEV)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    env:
+      MORPHEUS_URL: ${{ secrets.MORPHEUS_URL_DEV }}
+      MORPHEUS_TOKEN: ${{ secrets.MORPHEUS_TOKEN_DEV }}
+      MORPHEUS_ENV: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q -r requirements.txt
+      - name: Detect drift
+        run: python scripts/drift_detect.py --env dev

@@ -1,16 +1,3 @@
-"""
-Mock Morpheus API server.
-
-Serves realistic responses based on the JSON samples in /samples/.
-Use this for local development until you have real Morpheus credentials.
-
-Run with:
-    python mock_server/app.py
-
-The server starts at http://localhost:5000.
-Set MORPHEUS_URL=http://localhost:5000 in your .env to use it.
-"""
-
 import json
 import os
 from flask import Flask, jsonify, request
@@ -58,9 +45,16 @@ def _networks():
     return _store["networks"]
 
 
-def _paginate(items: list) -> dict:
-    return {
-        "meta": {"offset": 0, "max": 25, "size": len(items), "total": len(items)},
+def _paginate(items: list, offset: int, max_: int) -> tuple[list, dict]:
+    """Slice items according to pagination params and return (page, meta)."""
+    page = items[offset: offset + max_]
+    return page, {
+        "meta": {
+            "offset": offset,
+            "max": max_,
+            "size": len(page),
+            "total": len(items),
+        }
     }
 
 
@@ -86,10 +80,10 @@ def _unauthorized():
 def list_blueprints():
     if not _check_auth():
         return _unauthorized()
-    items = _blueprints()
-    resp = {"blueprints": items}
-    resp.update(_paginate(items))
-    return jsonify(resp)
+    offset = int(request.args.get("offset", 0))
+    max_ = int(request.args.get("max", 25))
+    page, meta = _paginate(_blueprints(), offset, max_)
+    return jsonify({"blueprints": page, **meta})
 
 
 @app.route("/api/blueprints/<int:blueprint_id>", methods=["GET"])
@@ -149,10 +143,10 @@ def delete_blueprint(blueprint_id: int):
 def list_workflows():
     if not _check_auth():
         return _unauthorized()
-    items = _workflows()
-    resp = {"taskSets": items}
-    resp.update(_paginate(items))
-    return jsonify(resp)
+    offset = int(request.args.get("offset", 0))
+    max_ = int(request.args.get("max", 25))
+    page, meta = _paginate(_workflows(), offset, max_)
+    return jsonify({"taskSets": page, **meta})
 
 
 @app.route("/api/task-sets/<int:workflow_id>", methods=["GET"])
@@ -177,6 +171,21 @@ def create_workflow():
     return jsonify({"success": True, "taskSet": workflow}), 201
 
 
+@app.route("/api/task-sets/<int:workflow_id>", methods=["PUT"])
+def update_workflow(workflow_id: int):
+    if not _check_auth():
+        return _unauthorized()
+    data = request.get_json(silent=True) or {}
+    workflow = data.get("taskSet", data)
+    for i, wf in enumerate(_workflows()):
+        if wf["id"] == workflow_id:
+            workflow["id"] = workflow_id
+            _workflows()[i] = workflow
+            print(f"[MOCK] Updated workflow id={workflow_id}")
+            return jsonify({"success": True, "taskSet": workflow})
+    return jsonify({"success": False, "msg": "Workflow not found"}), 404
+
+
 # ---------------------------------------------------------------------------
 # Clouds & Networks (read-only — these are infrastructure, not managed by us)
 # ---------------------------------------------------------------------------
@@ -185,20 +194,20 @@ def create_workflow():
 def list_clouds():
     if not _check_auth():
         return _unauthorized()
-    items = _clouds()
-    resp = {"zones": items}
-    resp.update(_paginate(items))
-    return jsonify(resp)
+    offset = int(request.args.get("offset", 0))
+    max_ = int(request.args.get("max", 25))
+    page, meta = _paginate(_clouds(), offset, max_)
+    return jsonify({"zones": page, **meta})
 
 
 @app.route("/api/networks", methods=["GET"])
 def list_networks():
     if not _check_auth():
         return _unauthorized()
-    items = _networks()
-    resp = {"networks": items}
-    resp.update(_paginate(items))
-    return jsonify(resp)
+    offset = int(request.args.get("offset", 0))
+    max_ = int(request.args.get("max", 25))
+    page, meta = _paginate(_networks(), offset, max_)
+    return jsonify({"networks": page, **meta})
 
 
 # ---------------------------------------------------------------------------

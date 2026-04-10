@@ -14,6 +14,7 @@ Usage:
 
 import argparse
 import os
+import re
 import sys
 
 import yaml
@@ -24,6 +25,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import scripts.morpheus_client as client
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def _safe_filename(name: str) -> str:
+    """Replace characters that are unsafe in filenames with underscores."""
+    return re.sub(r"[^\w\-]", "_", name)
+
 
 # Fields that are environment-specific and must be stripped on export.
 # The importer will resolve these from the environment mapping config.
@@ -108,7 +114,7 @@ def _export_blueprints(env: str, out_dir: str, cloud_map: dict, network_map: dic
         name = bp.get("name", f"blueprint-{bp['id']}")
         normalised = _replace_ids_in_blueprint(bp, cloud_map, network_map)
 
-        out_path = os.path.join(bp_dir, f"{name}.yml")
+        out_path = os.path.join(bp_dir, f"{_safe_filename(name)}.yml")
         with open(out_path, "w") as f:
             yaml.dump(normalised, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
 
@@ -133,7 +139,7 @@ def _export_workflows(env: str, out_dir: str):
         name = wf.get("name", f"workflow-{wf['id']}")
         normalised = _strip_keys(wf, WORKFLOW_STRIP_FIELDS)
 
-        out_path = os.path.join(wf_dir, f"{name}.yml")
+        out_path = os.path.join(wf_dir, f"{_safe_filename(name)}.yml")
         with open(out_path, "w") as f:
             yaml.dump(normalised, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
 

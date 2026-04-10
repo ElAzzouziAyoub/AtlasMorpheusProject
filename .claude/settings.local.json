@@ -3,7 +3,9 @@
     "allow": [
       "Bash(git init:*)",
       "Bash(mkdir -p environments/dev environments/test environments/prod scripts samples mock_server tests)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(chmod +x /home/th3g3ntl3man/Documents/ATLASproject/scripts/rollback.sh)",
+      "Bash(python -m pytest tests/ -v)"
     ]
   }
 }

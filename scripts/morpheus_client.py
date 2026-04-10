@@ -117,6 +117,10 @@ def create_workflow(payload: dict) -> dict:
     return _post("/api/task-sets", {"taskSet": payload})
 
 
+def update_workflow(workflow_id: int, payload: dict) -> dict:
+    return _put(f"/api/task-sets/{workflow_id}", {"taskSet": payload})
+
+
 # ---------------------------------------------------------------------------
 # Infrastructure (read-only references)
 # ---------------------------------------------------------------------------
