@@ -107,7 +107,7 @@ jobs:
     name: Promote to PROD
     needs: [validate-yaml, tests]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch'
     environment: production
     env:
       MORPHEUS_URL: ${{ secrets.MORPHEUS_URL_PROD }}
