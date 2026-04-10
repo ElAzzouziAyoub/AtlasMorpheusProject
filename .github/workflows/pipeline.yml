@@ -81,9 +81,7 @@ jobs:
     needs: [validate-yaml, tests]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/test' && github.event_name == 'push'
-    environment:
-      name: test
-      url: ${{ secrets.MORPHEUS_URL_TEST }}
+    environment: test
     env:
       MORPHEUS_URL: ${{ secrets.MORPHEUS_URL_TEST }}
       MORPHEUS_TOKEN: ${{ secrets.MORPHEUS_TOKEN_TEST }}
@@ -110,9 +108,7 @@ jobs:
     needs: [validate-yaml, tests]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment:
-      name: production
-      url: ${{ secrets.MORPHEUS_URL_PROD }}
+    environment: production
     env:
       MORPHEUS_URL: ${{ secrets.MORPHEUS_URL_PROD }}
       MORPHEUS_TOKEN: ${{ secrets.MORPHEUS_TOKEN_PROD }}
