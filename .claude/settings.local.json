@@ -5,7 +5,16 @@
       "Bash(mkdir -p environments/dev environments/test environments/prod scripts samples mock_server tests)",
       "Bash(git branch:*)",
       "Bash(chmod +x /home/th3g3ntl3man/Documents/ATLASproject/scripts/rollback.sh)",
-      "Bash(python -m pytest tests/ -v)"
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(gh run:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(git commit --allow-empty -m ':*)",
+      "Bash(cp -r /home/th3g3ntl3man/Documents/ATLASproject/environments/dev/blueprints /home/th3g3ntl3man/Documents/ATLASproject/environments/test/)",
+      "Bash(cp -r /home/th3g3ntl3man/Documents/ATLASproject/environments/dev/workflows /home/th3g3ntl3man/Documents/ATLASproject/environments/test/)",
+      "Bash(git checkout:*)",
+      "Bash(python -m pytest tests/ -q)",
+      "Bash(ping -c 1 github.com)"
     ]
   }
 }
