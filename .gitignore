@@ -13,7 +13,6 @@ config/secrets.yml
 
 # IDE
 .vscode/
-.idea/
 
 # OS
 .DS_Store
