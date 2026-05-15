@@ -140,8 +140,9 @@ def _import_blueprints(env: str, in_dir: str, mapping: dict, dry_run: bool):
             remapped = _remap_blueprint(bp, mapping)
             result = _upsert_blueprint(remapped, existing, dry_run)
             stats[result] += 1
-            name = bp.get("name", fname)
-            print(f"    {result}: {name}")
+            if not dry_run:
+                name = bp.get("name", fname)
+                print(f"    {result}: {name}")
         except (ValueError, KeyError) as exc:
             print(f"    ERROR in {fname}: {exc}")
             stats["errors"] += 1
