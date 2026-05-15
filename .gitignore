@@ -6,6 +6,7 @@ __pycache__/
 venv/
 dist/
 build/
+.claude/
 
 # Secrets — never commit these
 config/secrets.yml

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATLAS — Full Project Guide (Beginner Friendly)</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --panel: #ffffff; --ink: #1f2430; --muted: #5b6472;
+    --accent: #2b6cb0; --accent-soft: #e8f1fb; --border: #e2e6ec;
+    --code-bg: #1e2230; --code-ink: #e6e9f0; --ok: #2f855a; --warn: #b7791f; --bad: #c53030;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.65 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; gap: 32px; }
+  nav {
+    position: sticky; top: 0; align-self: flex-start; width: 250px;
+    max-height: 100vh; overflow-y: auto; padding: 24px 0; flex-shrink: 0;
+  }
+  nav h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 18px 0 8px; }
+  nav a { display: block; color: var(--muted); text-decoration: none; padding: 4px 10px; border-radius: 6px; font-size: 14px; }
+  nav a:hover { background: var(--accent-soft); color: var(--accent); }
+  main { flex: 1; min-width: 0; padding: 40px 0 120px; }
+  header.hero {
+    background: linear-gradient(135deg, #2b6cb0, #1a365d); color: #fff;
+    border-radius: 16px; padding: 40px; margin-bottom: 36px;
+  }
+  header.hero h1 { margin: 0 0 8px; font-size: 34px; }
+  header.hero p { margin: 0; opacity: .9; font-size: 18px; }
+  h2.section { font-size: 26px; margin: 52px 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+  h3 { font-size: 20px; margin: 30px 0 10px; }
+  h4 { font-size: 16px; margin: 22px 0 8px; color: var(--muted); }
+  p, li { color: var(--ink); }
+  code { background: #eef0f4; padding: 2px 6px; border-radius: 4px; font-family: "SF Mono", Consolas, Menlo, monospace; font-size: 90%; }
+  pre {
+    background: var(--code-bg); color: var(--code-ink); padding: 18px 20px;
+    border-radius: 10px; overflow-x: auto; font-family: "SF Mono", Consolas, Menlo, monospace;
+    font-size: 13.5px; line-height: 1.6;
+  }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14.5px; }
+  th, td { border: 1px solid var(--border); padding: 10px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--accent-soft); color: var(--accent); }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .callout { border-radius: 10px; padding: 16px 20px; margin: 20px 0; border-left: 5px solid; }
+  .callout.key  { background: #eef6ff; border-color: var(--accent); }
+  .callout.warn { background: #fffbeb; border-color: var(--warn); }
+  .callout.ok   { background: #f0fff4; border-color: var(--ok); }
+  .callout strong { display: block; margin-bottom: 4px; }
+  .pill { display: inline-block; background: var(--accent-soft); color: var(--accent); border-radius: 20px; padding: 2px 12px; font-size: 12px; font-weight: 600; }
+  .arrow { text-align: center; color: var(--muted); font-size: 22px; margin: 6px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid2 .box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .grid2 .box h4 { margin-top: 0; }
+  footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+  .step { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin: 16px 0; }
+  .step .num { display: inline-block; background: var(--accent); color: #fff; width: 26px; height: 26px; border-radius: 50%; text-align: center; line-height: 26px; font-weight: 700; margin-right: 8px; }
+  @media (max-width: 880px) { .wrap { flex-direction: column; } nav { position: static; width: auto; max-height: none; } .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <h2>Contents</h2>
+  <a href="#what">1. What is this?</a>
+  <a href="#problem">2. The problem</a>
+  <a href="#gitops">3. The solution: GitOps</a>
+  <a href="#ids">4. The hard part: IDs</a>
+  <a href="#structure">5. Project structure</a>
+  <a href="#components">6. Every component explained</a>
+  <a href="#mock">7. The mock server</a>
+  <a href="#pipeline">8. The CI/CD pipeline</a>
+  <a href="#branching">9. Branching model</a>
+  <a href="#rollback">10. Rollback</a>
+  <a href="#setup">11. Setup</a>
+  <a href="#usage">12. How to use it</a>
+  <a href="#testing">13. How to test it</a>
+  <a href="#errors">14. Common errors</a>
+  <a href="#real">15. Going to real Morpheus</a>
+  <a href="#roadmap">16. Roadmap</a>
+  <a href="#faq">17. FAQ</a>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>ATLAS — Full Project Guide</h1>
+  <p>A GitOps pipeline for Morpheus / ACS. Written for someone who knows nothing about the project.</p>
+</header>
+
+<h2 class="section" id="what">1. What is this project, in one paragraph?</h2>
+<p>
+Companies run lots of servers and cloud infrastructure using a management tool called
+<strong>Morpheus</strong> (also known as Atlas Cloud Services / ACS). Today they configure it by
+<em>clicking buttons in a web dashboard</em>. This project replaces that clicking with
+<strong>text files stored in Git</strong>, so every change is recorded, reviewed, reversible, and
+can be copied safely between environments (DEV → TEST → PROD). That approach is called
+<strong>GitOps</strong>: Git becomes the single source of truth for your infrastructure.
+</p>
+<div class="callout key">
+  <strong>The single most important thing to know</strong>
+  This project is <em>mock-first by design</em>. It ships with a fake Morpheus that runs on your
+  laptop, so you can build, test, and demonstrate the <em>entire</em> system with no real
+  credentials and no internet. You are never blocked waiting for API access.
+</div>
+
+<h2 class="section" id="problem">2. The problem (told as a story)</h2>
+<p>Imagine a team managing hundreds of virtual machines through the Morpheus dashboard. One day:</p>
+<ul>
+  <li><strong>"Who changed the web server config last week?"</strong> — Nobody knows. Someone clicked something. There is no history.</li>
+  <li><strong>"That change broke production — can we undo it?"</strong> — No. Clicking a button has no "undo".</li>
+  <li><strong>"TEST works perfectly. Copy it exactly to PRODUCTION."</strong> — Only by manually re-clicking every single setting by hand, hoping nobody fat-fingers a value.</li>
+</ul>
+<p>So the real problems are: <strong>no history, no review, no rollback, no safe promotion between environments.</strong></p>
+
+<h2 class="section" id="gitops">3. The solution: GitOps</h2>
+<p>
+Software developers solved exactly this problem for <em>source code</em> decades ago using
+<strong>Git</strong> — a system that records every change, who made it, when, and why, and lets
+you review changes before they apply and revert them afterwards. This project applies that same
+idea to infrastructure configuration.
+</p>
+<p>The new way of working:</p>
+<pre><code>1. Edit a YAML text file        →  "I want a web server with these settings"
+2. Open a Merge Request (MR)    →  a teammate reviews and approves it
+3. The CI/CD pipeline runs      →  a robot automatically pushes it into Morpheus</code></pre>
+<div class="callout ok">
+  <strong>What you gain</strong>
+  Full history (Git log), peer review (Merge Requests), instant rollback (revert a commit),
+  and identical, repeatable promotion from DEV to TEST to PROD.
+</div>
+
+<h2 class="section" id="ids">4. The genuinely hard part: object IDs</h2>
+<p>
+Inside Morpheus, things refer to each other by <strong>numbers</strong>. A blueprint might say
+<code>cloudId: 3</code>. The catch: "cloud number 3" in DEV is a totally different machine than
+"cloud number 3" in PROD. If you blindly copy the file, you deploy to the wrong place.
+</p>
+<p>The fix is a <strong>two-step translation</strong>:</p>
+<div class="grid2">
+  <div class="box">
+    <h4>On EXPORT (Morpheus → Git)</h4>
+    <p>Replace the meaningless number with a human name.</p>
+    <pre><code>cloudId: 3
+      ↓
+cloudName: "DEV-Nutanix"</code></pre>
+  </div>
+  <div class="box">
+    <h4>On IMPORT (Git → Morpheus)</h4>
+    <p>A per-environment lookup file translates the name back to that environment's real number.</p>
+    <pre><code>cloudName: "DEV-Nutanix"
+      ↓  (reads mapping_test.yml)
+cloudId: 1   # what it is in TEST</code></pre>
+  </div>
+</div>
+<p>
+This makes the YAML files <strong>environment-agnostic</strong> — they describe <em>what</em> you
+want, not <em>where</em> it physically lives. Here is a real before/after from this project:
+</p>
+<div class="grid2">
+  <div class="box">
+    <h4>Raw from Morpheus (JSON)</h4>
+<pre><code>"id": 1,
+"owner": { "username": "admin" },
+"dateCreated": "2024-01-15...",
+"cloudId": 3,
+"network": { "id": "network-17" },
+"plan": { "id": 12 }</code></pre>
+  </div>
+  <div class="box">
+    <h4>Stored in Git (YAML)</h4>
+<pre><code># id / owner / dates stripped
+cloudName: DEV-Nutanix
+network:
+  name: DEV-VLAN-100
+plan:
+  id: 12
+  _logical_name: plan-12</code></pre>
+  </div>
+</div>
+
+<h2 class="section" id="structure">5. Project structure</h2>
+<pre><code>AtlasMorpheusProject/
+├── .env.example            Template for credentials (copy to .env; .env is git-ignored)
+├── requirements.txt        Python dependencies
+│
+├── config/
+│   ├── mapping_dev.yml     Logical name → real ID, for DEV
+│   ├── mapping_test.yml    ...for TEST
+│   └── mapping_prod.yml    ...for PROD
+│
+├── environments/
+│   └── dev/
+│       ├── blueprints/     YAML files exported from Morpheus
+│       └── workflows/
+│
+├── mock_server/
+│   └── app.py              Fake Morpheus API (Flask) — runs on your laptop
+│
+├── samples/                Realistic fake API data the mock server serves
+│   ├── blueprints_list.json
+│   ├── workflows_list.json
+│   ├── clouds_list.json
+│   └── networks_list.json
+│
+├── scripts/
+│   ├── morpheus_client.py  One shared HTTP client for all Morpheus calls
+│   ├── export.py           Morpheus → YAML  (the "pull")
+│   ├── importer.py         YAML → Morpheus  (the "push")
+│   ├── drift_detect.py     Compares live Morpheus to Git
+│   └── rollback.sh         Re-imports the previous Git commit
+│
+├── tests/                  Automated tests (no network needed)
+│   ├── test_export.py
+│   ├── test_import.py
+│   └── test_mock_server.py
+│
+└── .github/workflows/
+    └── pipeline.yml        The CI/CD "robot" (GitHub Actions)</code></pre>
+
+<h2 class="section" id="components">6. Every component explained</h2>
+
+<h3><code>scripts/morpheus_client.py</code> — the one phone line to Morpheus</h3>
+<p>
+Every other script talks to Morpheus <em>through this one file</em> instead of calling the network
+directly. It reads two values — <code>MORPHEUS_URL</code> and <code>MORPHEUS_TOKEN</code> — from
+your <code>.env</code> file. Crucially, it reads them <em>lazily</em> (only when a call is actually
+made), so the test suite can import it without any credentials. To switch between the fake
+Morpheus and a real one you change <em>only the URL</em>; no code changes anywhere.
+</p>
+
+<h3><code>scripts/export.py</code> — the "pull" button</h3>
+<p>Fetches blueprints and workflows from Morpheus and writes them as YAML files. While doing so it:</p>
+<ol>
+  <li>Strips environment-specific fields: <code>id</code>, <code>owner</code>, <code>dateCreated</code>, <code>lastUpdated</code>, <code>resourcePermission</code>.</li>
+  <li>Replaces <code>cloudId: 3</code> with <code>cloudName: "DEV-Nutanix"</code> (looked up live from Morpheus).</li>
+  <li>Replaces <code>network.id: "network-17"</code> with <code>network.name: "DEV-VLAN-100"</code>.</li>
+  <li>Adds a <code>_logical_name</code> to plan references so the importer can resolve them later.</li>
+</ol>
+
+<h3><code>scripts/importer.py</code> — the "push" button</h3>
+<p>
+The reverse of export. Reads the YAML files, then uses <code>config/mapping_&lt;env&gt;.yml</code>
+to translate logical names back into that environment's real IDs. It uses <strong>upsert</strong>
+logic: if a blueprint of that name already exists it <em>updates</em> it, otherwise it
+<em>creates</em> it — so running it twice is safe (idempotent). If a name is missing from the
+mapping file, it stops with a clear error instead of pushing bad data. The <code>--dry-run</code>
+flag shows exactly what <em>would</em> happen and changes nothing.
+</p>
+
+<h3><code>scripts/drift_detect.py</code> — the "did someone cheat?" checker</h3>
+<p>
+Answers: <em>"Did someone change Morpheus directly in the GUI, bypassing Git?"</em> It re-exports
+the live state, normalises it the same way as <code>export.py</code>, and diffs it against the
+YAML in Git. If anything differs it prints the difference and <strong>exits with code 1</strong> —
+that non-zero exit is what fails the CI job and triggers an alert.
+</p>
+
+<h3><code>config/mapping_&lt;env&gt;.yml</code> — the translation tables</h3>
+<p>One file per environment, mapping human names to that environment's real numbers. Example from <code>mapping_dev.yml</code>:</p>
+<pre><code>environment: dev
+clouds:
+  DEV-Nutanix: 3
+networks:
+  DEV-VLAN-100: 17
+plans:
+  plan-12: 12</code></pre>
+<p>
+The same logical name (<code>DEV-Nutanix</code>) points to <code>3</code> in
+<code>mapping_dev.yml</code> but to <code>1</code> in <code>mapping_test.yml</code>. That is the
+whole portability trick. Until real API access exists, these hold placeholder values.
+</p>
+
+<h3><code>tests/</code> — proof the logic is correct</h3>
+<p>
+26 automated tests that run with no network and no mock server. They check the stripping logic,
+the ID-to-name replacement, the reverse re-mapping, and the mock server's endpoints.
+</p>
+
+<h2 class="section" id="mock">7. The mock server — why it exists and why it matters</h2>
+<p>
+<code>mock_server/app.py</code> is a small Flask web application that <strong>pretends to be
+Morpheus</strong>. It serves the realistic sample data in <code>samples/</code> at the exact same
+URL paths the real Morpheus uses (<code>/api/blueprints</code>, <code>/api/task-sets</code>,
+<code>/api/zones</code>, <code>/api/networks</code>) and supports create/update/delete in memory
+for the duration of a session. It accepts any non-empty Bearer token.
+</p>
+<div class="callout key">
+  <strong>This is the answer to "we don't have API keys"</strong>
+  The scripts cannot tell the mock apart from the real thing — same endpoints, same response
+  shapes. So the full lifecycle (export → import → drift) can be developed, tested, and
+  <em>demonstrated</em> with zero credentials. Switching to a real Morpheus later is a one-line
+  change in <code>.env</code>. This is a deliberate engineering choice (dependency inversion /
+  contract testing), not a workaround.
+</div>
+
+<h2 class="section" id="pipeline">8. The CI/CD pipeline (the robot)</h2>
+<p><code>.github/workflows/pipeline.yml</code> defines what runs automatically:</p>
+<pre><code>push to ANY branch
+   └─&gt; [ validate ]  lint all YAML + run the 26 tests
+
+push to `test` branch
+   └─&gt; [ deploy ]    dry-run import to TEST, then real import to TEST
+
+manual trigger (workflow_dispatch)
+   └─&gt; [ promote ]   dry-run import to PROD, then real import to PROD  (gated)
+
+daily at 06:00 UTC (schedule)
+   └─&gt; [ drift ]     export live state, diff against Git, fail if drift</code></pre>
+<p>
+PROD promotion only runs on a manual trigger and is tied to a protected GitHub "production"
+environment, so a human must approve it. Real Morpheus URLs and tokens would live in GitHub
+Secrets — never in the code.
+</p>
+
+<h2 class="section" id="branching">9. Branching model</h2>
+<table>
+  <tr><th>Branch</th><th>Purpose</th></tr>
+  <tr><td><code>feature/*</code></td><td>Daily work. No restrictions.</td></tr>
+  <tr><td><code>test</code></td><td>Protected. Merging here auto-deploys to TEST.</td></tr>
+  <tr><td><code>main</code></td><td>Protected. Promotes to PROD, manual approval required.</td></tr>
+</table>
+<p>Work on a <code>feature/</code> branch → open MR to <code>test</code> → after TEST validation, open MR from <code>test</code> to <code>main</code> for PROD.</p>
+
+<h2 class="section" id="rollback">10. Rollback (<code>scripts/rollback.sh</code>)</h2>
+<p>
+If an import made things worse, this script reverts by re-importing the configuration from the
+<em>previous</em> Git commit. It does this safely using a temporary Git worktree at
+<code>HEAD~1</code>, runs the importer from that snapshot, then cleans up. Usage:
+</p>
+<pre><code>./scripts/rollback.sh --env test</code></pre>
+<p>It also reminds you to properly revert the bad commit in Git afterwards (<code>git revert HEAD</code>).</p>
+
+<h2 class="section" id="setup">11. One-time setup</h2>
+<div class="callout ok">
+  <strong>Good news</strong> On this machine the setup is already done: the virtual environment
+  (<code>.venv/</code>), the dependencies, and the <code>.env</code> file (pointing at the mock)
+  all exist. The steps below are only needed on a fresh machine.
+</div>
+<pre><code># From the project folder
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+# Create the credentials file pointing at the local fake Morpheus
+# .env contents:
+#   MORPHEUS_URL=http://localhost:5000
+#   MORPHEUS_TOKEN=mock-token-dev
+#   MORPHEUS_ENV=dev</code></pre>
+<div class="callout warn">
+  <strong>Shell note (you use the fish shell)</strong>
+  The classic <code>source .venv/bin/activate</code> is written for bash. In fish it would be
+  <code>source .venv/bin/activate.fish</code>. The simplest path is to skip activation entirely
+  and call <code>.venv/bin/python</code> directly — that is what every command below does.
+</div>
+
+<h2 class="section" id="usage">12. How to use it (day-to-day)</h2>
+<p>You work with <strong>two terminals</strong>. Terminal 1 runs the fake Morpheus and stays open. Terminal 2 is where you run commands.</p>
+<p><span class="pill">Terminal 1</span> Start the fake Morpheus (leave it running):</p>
+<pre><code>cd /home/s1l3ntb1t/Documents/AtlasMorpheusProject
+.venv/bin/python mock_server/app.py</code></pre>
+<p><span class="pill">Terminal 2</span> Typical workflow:</p>
+<pre><code># Pull current state out of Morpheus into Git
+.venv/bin/python scripts/export.py --env dev
+
+# (edit the YAML files under environments/dev/ as needed)
+
+# Preview the push — changes nothing
+.venv/bin/python scripts/importer.py --env dev --dry-run
+
+# Actually push
+.venv/bin/python scripts/importer.py --env dev
+
+# Check nobody changed Morpheus behind Git's back
+.venv/bin/python scripts/drift_detect.py --env dev</code></pre>
+
+<h2 class="section" id="testing">13. How to test it (full walkthrough)</h2>
+<p>This proves every part works. Keep Terminal 1 (the mock) running for steps 1–5.</p>
+
+<div class="step"><span class="num">1</span><strong>Confirm the fake Morpheus is alive</strong>
+<pre><code>curl -s http://localhost:5000/api/ping</code></pre>
+Expect: <code>{"msg": "Morpheus mock server is running", "success": true}</code>
+</div>
+
+<div class="step"><span class="num">2</span><strong>Export, then look at what came out</strong>
+<pre><code>.venv/bin/python scripts/export.py --env dev
+cat environments/dev/blueprints/ubuntu-web-server.yml</code></pre>
+Notice <code>cloudId: 3</code> became <code>cloudName: DEV-Nutanix</code>, and the
+<code>id</code>/<code>owner</code>/date fields are gone. That is the portability transformation.
+</div>
+
+<div class="step"><span class="num">3</span><strong>Import — preview first, then for real</strong>
+<pre><code>.venv/bin/python scripts/importer.py --env dev --dry-run
+.venv/bin/python scripts/importer.py --env dev</code></pre>
+Dry-run prints <code>[dry-run] would update: nginx-lb</code> (and similar). The real run prints
+<code>updated: nginx-lb</code>.
+</div>
+
+<div class="step"><span class="num">4</span><strong>Drift detection — make it catch a "GUI change"</strong>
+<pre><code># Simulate someone editing Morpheus directly, bypassing Git:
+curl -s -X PUT http://localhost:5000/api/blueprints/2 \
+  -H "Authorization: Bearer mock-token-dev" \
+  -H "Content-Type: application/json" \
+  -d '{"blueprint": {"id": 2, "name": "nginx-lb", "description": "CHANGED IN GUI"}}'
+
+# The checker should now report drift and exit with code 1:
+.venv/bin/python scripts/drift_detect.py --env dev
+
+# Fix it (Git wins): re-import, then confirm drift is gone:
+.venv/bin/python scripts/importer.py --env dev --type blueprints
+.venv/bin/python scripts/drift_detect.py --env dev</code></pre>
+First run prints <code>DRIFT DETECTED</code>; after the re-import it prints
+<code>No drift detected.</code>
+</div>
+
+<div class="step"><span class="num">5</span><strong>Run the automated test suite</strong> (does not need the mock running)
+<pre><code>.venv/bin/python -m pytest tests/ -v</code></pre>
+Expect: <code>26 passed</code>.
+</div>
+
+<div class="step"><span class="num">6</span><strong>When finished</strong>
+In Terminal 1, press <code>Ctrl+C</code> to stop the fake Morpheus.
+</div>
+
+<div class="callout ok">
+  <strong>Expected result</strong>
+  All six steps pass. That demonstrates the complete GitOps lifecycle — export, version,
+  import, drift detection, and an automated test suite — with no real credentials.
+</div>
+
+<h2 class="section" id="errors">14. Common errors and what they mean</h2>
+<table>
+  <tr><th>Message</th><th>Cause</th><th>Fix</th></tr>
+  <tr><td><code>MORPHEUS_URL is not set</code></td><td><code>.env</code> missing or wrong folder</td><td>Ensure <code>.env</code> exists in the project root</td></tr>
+  <tr><td><code>Failed to resolve / Connection refused</code></td><td>Mock server not running</td><td>Start <code>.venv/bin/python mock_server/app.py</code> in Terminal 1</td></tr>
+  <tr><td><code>Mapping config not found</code></td><td>Imported an env with no mapping file</td><td>Create <code>config/mapping_&lt;env&gt;.yml</code></td></tr>
+  <tr><td><code>Cloud 'X' not found in mapping</code></td><td>A name in the YAML isn't in the mapping</td><td>Add it to <code>config/mapping_&lt;env&gt;.yml</code></td></tr>
+  <tr><td><code>401 Unauthorized</code></td><td>Missing/empty token</td><td>Check <code>MORPHEUS_TOKEN</code> in <code>.env</code></td></tr>
+</table>
+
+<h2 class="section" id="real">15. Switching to a real Morpheus later</h2>
+<p>If real access ever arrives, the <em>only</em> change is the <code>.env</code> file:</p>
+<pre><code>MORPHEUS_URL=https://your-real-morpheus-instance.com
+MORPHEUS_TOKEN=your-real-api-token
+MORPHEUS_ENV=dev</code></pre>
+<p>
+Then fill the real numbers into <code>config/mapping_dev.yml</code> (found by calling the real
+<code>/api/zones</code> and <code>/api/networks</code>). No script changes. That is the payoff of
+routing everything through one client.
+</p>
+
+<h2 class="section" id="roadmap">16. Object types roadmap</h2>
+<table>
+  <tr><th>Object type</th><th>Status</th></tr>
+  <tr><td>Blueprints</td><td>Implemented</td></tr>
+  <tr><td>Workflows (task sets)</td><td>Implemented</td></tr>
+  <tr><td>Policies</td><td>To do</td></tr>
+  <tr><td>Instance types</td><td>To do</td></tr>
+  <tr><td>Tasks</td><td>To do</td></tr>
+  <tr><td>Catalog items</td><td>To do</td></tr>
+</table>
+
+<h2 class="section" id="faq">17. FAQ</h2>
+<h4>Do we need real Morpheus API keys to finish this project?</h4>
+<p><strong>No.</strong> The project is mock-first by design. The full pipeline runs and is demonstrable on the local fake Morpheus with no credentials. API keys are only needed if you later want to point it at a real production system.</p>
+<h4>Isn't the mock server "just an API" too?</h4>
+<p>Yes — and that is the point. The whole project's job is to bridge Git and a REST API. The mock implements that same API contract locally so the bridge can be exercised fully. Removing the API entirely would defeat the purpose of the project.</p>
+<h4>What's the difference between export and import?</h4>
+<p><em>Export</em> = Morpheus → Git (pull current state out, strip/translate IDs). <em>Import</em> = Git → Morpheus (translate names back to IDs, create or update).</p>
+<h4>What does "drift" mean?</h4>
+<p>Someone changed Morpheus directly through its dashboard instead of through Git. Git no longer matches reality. Drift detection finds that and fails the pipeline so the team is alerted.</p>
+<h4>Why strip <code>id</code>, <code>owner</code>, and dates on export?</h4>
+<p>They are specific to one environment/instant and would be wrong or meaningless in another environment. The files must describe <em>what</em> you want, not one system's bookkeeping.</p>
+
+<footer>
+  ATLAS — GitOps Pipeline for Morpheus / ACS. This guide is self-contained: open it in any
+  browser, no internet required. Generated as project documentation; safe to keep in the repo
+  or share with teammates.
+</footer>
+</main>
+</div>
+</body>
+</html>
