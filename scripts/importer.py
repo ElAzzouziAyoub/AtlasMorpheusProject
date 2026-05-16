@@ -95,13 +95,26 @@ def _remap_blueprint(bp: dict, mapping: dict) -> dict:
 # Upsert logic (create or update based on name)
 # ---------------------------------------------------------------------------
 
+def _bp_key(bp: dict) -> str:
+    """
+    Stable identity key for a blueprint, tolerant of objects that lost their
+    top-level `name` (e.g. created/replaced via a raw API call). Mirrors the
+    fallback used in export.py so the index key and the upsert lookup key match.
+    """
+    return (
+        bp.get("name")
+        or bp.get("config", {}).get("name")
+        or f"blueprint-{bp.get('id')}"
+    )
+
+
 def _upsert_blueprint(bp: dict, existing: dict[str, dict], dry_run: bool) -> str:
     """
     If a blueprint with this name already exists → update it.
     Otherwise → create it.
     Returns 'created', 'updated', or 'dry-run'.
     """
-    name = bp.get("name") or bp.get("config", {}).get("name", "unknown")
+    name = _bp_key(bp)
 
     if dry_run:
         action = "would update" if name in existing else "would create"
@@ -124,7 +137,7 @@ def _import_blueprints(env: str, in_dir: str, mapping: dict, dry_run: bool):
         return
 
     # Build index of existing blueprints by name for upsert logic
-    existing = {bp["name"]: bp for bp in client.list_blueprints()}
+    existing = {_bp_key(bp): bp for bp in client.list_blueprints()}
 
     yml_files = [f for f in os.listdir(bp_dir) if f.endswith(".yml")]
     print(f"  Found {len(yml_files)} blueprint file(s)")
