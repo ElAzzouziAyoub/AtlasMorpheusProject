@@ -83,8 +83,11 @@ jobs:
     if: github.ref == 'refs/heads/test' && github.event_name == 'push'
     environment: test
     env:
-      MORPHEUS_URL: ${{ secrets.MORPHEUS_URL_TEST }}
-      MORPHEUS_TOKEN: ${{ secrets.MORPHEUS_TOKEN_TEST }}
+      # Mock-first: TEST deploy runs against the local mock server started
+      # below (no real TEST Morpheus / no secrets needed). For a real TEST
+      # instance, swap these back to ${{ secrets.MORPHEUS_URL_TEST }} etc.
+      MORPHEUS_URL: http://localhost:5000
+      MORPHEUS_TOKEN: mock-token-test
       MORPHEUS_ENV: test
     steps:
       - uses: actions/checkout@v4
@@ -92,6 +95,19 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -q -r requirements.txt
+      - name: Start mock Morpheus server
+        run: |
+          python mock_server/app.py > mock_server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5000/api/ping > /dev/null; then
+              echo "Mock server is up."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Mock server failed to start. Log:"
+          cat mock_server.log
+          exit 1
       - name: Dry-run (validate mappings)
         run: python scripts/importer.py --env test --dry-run
       - name: Deploy
@@ -110,8 +126,11 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     environment: production
     env:
-      MORPHEUS_URL: ${{ secrets.MORPHEUS_URL_PROD }}
-      MORPHEUS_TOKEN: ${{ secrets.MORPHEUS_TOKEN_PROD }}
+      # Mock-first: PROD promotion runs against the local mock server started
+      # below (no real PROD Morpheus / no secrets needed). For a real PROD
+      # instance, swap these back to ${{ secrets.MORPHEUS_URL_PROD }} etc.
+      MORPHEUS_URL: http://localhost:5000
+      MORPHEUS_TOKEN: mock-token-prod
       MORPHEUS_ENV: prod
     steps:
       - uses: actions/checkout@v4
@@ -119,6 +138,19 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -q -r requirements.txt
+      - name: Start mock Morpheus server
+        run: |
+          python mock_server/app.py > mock_server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5000/api/ping > /dev/null; then
+              echo "Mock server is up."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Mock server failed to start. Log:"
+          cat mock_server.log
+          exit 1
       - name: Dry-run (validate mappings)
         run: python scripts/importer.py --env prod --dry-run
       - name: Promote
@@ -133,8 +165,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     env:
-      MORPHEUS_URL: ${{ secrets.MORPHEUS_URL_DEV }}
-      MORPHEUS_TOKEN: ${{ secrets.MORPHEUS_TOKEN_DEV }}
+      # Mock-first project: there is no real DEV Morpheus, so drift detection
+      # runs against the local mock server started in the step below.
+      # No secrets required.
+      MORPHEUS_URL: http://localhost:5000
+      MORPHEUS_TOKEN: mock-token-dev
       MORPHEUS_ENV: dev
     steps:
       - uses: actions/checkout@v4
@@ -142,5 +177,18 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -q -r requirements.txt
+      - name: Start mock Morpheus server
+        run: |
+          python mock_server/app.py > mock_server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5000/api/ping > /dev/null; then
+              echo "Mock server is up."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Mock server failed to start. Log:"
+          cat mock_server.log
+          exit 1
       - name: Detect drift
         run: python scripts/drift_detect.py --env dev

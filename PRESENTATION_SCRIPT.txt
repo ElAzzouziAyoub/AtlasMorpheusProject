@@ -1,0 +1,255 @@
+================================================================================
+ATLAS — GitOps Pipeline for Morpheus
+15-MINUTE PRESENTATION SCRIPT (what to say, out loud)
+================================================================================
+
+HOW TO USE THIS FILE
+- The lines after ">> SAY:" are what you actually speak. Say them in your own
+  words; don't read robotically.
+- Lines in [BRACKETS] are stage directions / what to show on screen — do NOT
+  read these out.
+- Time markers (e.g. 0:00-1:30) show the budget. If you fall behind, the parts
+  marked [CUT IF SHORT ON TIME] can be shortened or skipped.
+- There is a DEMO section. A SAFETY NET is included in case the live demo fails.
+
+Total budget: 15:00  ->  ~12:30 talking + demo, ~2:30 questions.
+
+================================================================================
+PART 1 — THE PROBLEM            (0:00 - 2:00)
+================================================================================
+
+[SLIDE: title — "ATLAS: GitOps for Morpheus" + your name]
+
+>> SAY:
+"Good morning. I'm going to present ATLAS, a project that brings the discipline
+of software version control to cloud infrastructure management.
+
+Let me start with the problem. Many companies use a platform called Morpheus to
+manage their cloud infrastructure — creating servers, networks, automation
+workflows. Today they do all of this by hand, clicking around in a web
+interface. They build it in their DEV environment, then click it all again in
+TEST, then again in PRODUCTION.
+
+That manual approach has three serious weaknesses:
+ - No history. Nobody can tell you who changed what, or when.
+ - No review. A wrong click in production has no safety net.
+ - No rollback. If a change breaks something, there is no clean way back.
+
+ATLAS fixes this by making Git — the same version control developers use for
+code — the single source of truth for infrastructure."
+
+================================================================================
+PART 2 — THE SOLUTION: GITOPS   (2:00 - 3:30)
+================================================================================
+
+[SLIDE: the 4-step loop — Edit YAML -> Merge Request -> Review -> Auto-deploy]
+
+>> SAY:
+"This approach is called GitOps. After ATLAS is in place, the workflow becomes:
+
+ 1. An engineer edits a YAML file in Git instead of clicking in the GUI.
+ 2. They open a Merge Request.
+ 3. A colleague reviews and approves it — just like a code review.
+ 4. A CI/CD pipeline automatically pushes that change into Morpheus.
+
+So every infrastructure change is now reviewed, recorded, and reversible. The
+infrastructure is described as files, and Git history becomes the audit log."
+
+================================================================================
+PART 3 — THE HARD PROBLEM: OBJECT IDs   (3:30 - 5:30)
+================================================================================
+
+[SLIDE: cloudId: 3 (DEV) vs cloudId: 1 (PROD) — same thing, different number]
+
+>> SAY:
+"The single hardest technical problem in this project is object IDs.
+
+Inside Morpheus, things like clouds and networks aren't referenced by name —
+they're referenced by internal ID numbers. And those numbers are DIFFERENT in
+every environment. The Nutanix cloud might be ID 3 in DEV, but ID 1 in
+PRODUCTION. So if you copied a blueprint's raw export from DEV straight into
+PROD, it would point at the wrong cloud — or fail entirely.
+
+Our solution is a two-step translation:
+
+ - On EXPORT, we replace the numbers with stable logical names. 'cloudId 3'
+   becomes 'cloudName: DEV-Nutanix'.
+ - On IMPORT, a small per-environment mapping file translates that name back
+   into whatever the correct ID is in the target environment.
+
+The result: the YAML files in Git are environment-agnostic. They describe WHAT
+you want, not WHERE it physically lives. That's what makes one file safely
+promotable from DEV to TEST to PROD."
+
+================================================================================
+PART 4 — ARCHITECTURE           (5:30 - 7:00)
+================================================================================
+
+[SLIDE: diagram — Morpheus  <->  morpheus_client.py  <->  export/import  <->  Git]
+
+>> SAY:
+"Architecturally there are four moving parts.
+
+First, 'morpheus_client.py' — one single module that every script uses to talk
+to Morpheus. Nothing else touches the network directly. This one design choice
+is what makes everything else flexible.
+
+Second, 'export.py' — the pull direction. Morpheus to Git. It also does the
+ID-to-name translation I just described.
+
+Third, 'importer.py' — the push direction. Git to Morpheus. It does the reverse
+translation using the mapping file, and it's idempotent: if an object already
+exists it updates it, otherwise it creates it. It also has a dry-run mode that
+shows exactly what would happen without changing anything.
+
+Fourth, 'drift_detect.py' — a watchdog. It answers the question: did anyone
+change Morpheus directly, behind Git's back?"
+
+================================================================================
+PART 5 — MOCK-FIRST DESIGN      (7:00 - 8:30)
+================================================================================
+
+[SLIDE: .env one-line switch — localhost:5000  vs  real Morpheus URL]
+
+>> SAY:
+"Now, an important engineering decision. Real Morpheus access is often not
+available during development — waiting for credentials can block weeks of work.
+
+So we built a faithful mock of the Morpheus API: a small Flask server that
+serves realistic sample data at the exact same API addresses the real Morpheus
+uses. It even checks authentication tokens like the real one.
+
+This is not a shortcut — it's a deliberate design. Because every script goes
+through that single client module, switching from the mock to a real Morpheus
+is literally a ONE-LINE change in a config file: the URL. Nothing else changes.
+That means the entire pipeline is fully demonstrable end-to-end, today, with
+no credentials — which is exactly what I'll show you now."
+
+================================================================================
+PART 6 — LIVE DEMO              (8:30 - 11:30)
+================================================================================
+
+[Have TWO terminals open and ready. Use the project's virtual environment.]
+[Terminal 1 — start the mock server BEFORE you start talking this section:]
+      .venv/bin/python mock_server/app.py
+[Leave it running. Switch to Terminal 2 for the commands below.]
+
+>> SAY:
+"Here's the mock Morpheus running locally. Let's run the whole loop.
+
+Step one — export from Morpheus into Git."
+[Terminal 2:]
+      .venv/bin/python scripts/export.py --env dev
+
+>> SAY:
+"It pulled the blueprints and workflows and wrote them as YAML. Let's look at
+one — notice there are NO raw ID numbers, just readable names like
+DEV-Nutanix and DEV-VLAN-100."
+[Terminal 2:]
+      cat environments/dev/blueprints/ubuntu-web-server.yml
+
+>> SAY:
+"Now the reverse — pushing Git back into Morpheus. First a dry-run, which
+validates everything and shows what WOULD happen, changing nothing."
+[Terminal 2:]
+      .venv/bin/python scripts/importer.py --env dev --dry-run
+
+>> SAY:
+"All green. Now the real import."
+[Terminal 2:]
+      .venv/bin/python scripts/importer.py --env dev
+
+>> SAY:
+"And finally drift detection — comparing the live state to Git. Right now they
+match, so it reports no drift and exits cleanly. In the pipeline, if they did
+NOT match, this would fail the job and raise an alert."
+[Terminal 2:]
+      .venv/bin/python scripts/drift_detect.py --env dev
+
+>> SAY:
+"That's the complete GitOps loop: export, review in Git, import, and drift
+detection — all working end to end."
+
+[SAFETY NET — IF ANY DEMO COMMAND FAILS, DO NOT PANIC. SAY:]
+"I'll show you the expected output on this slide instead and move on —"
+[Switch to a backup SLIDE with pre-captured terminal output, then continue.]
+
+================================================================================
+PART 7 — CI/CD PIPELINE & SAFETY   (11:30 - 12:45)
+================================================================================
+
+[SLIDE: pipeline stages — validate -> deploy(test) -> promote(prod) -> drift]
+
+>> SAY:
+"All of this is automated by a CI/CD pipeline. On every push it validates the
+YAML and runs the test suite. When changes reach the TEST branch, it
+automatically deploys to TEST. Promotion to PRODUCTION requires a manual human
+approval — that's the deliberate safety gate. And a scheduled job runs drift
+detection every day.
+
+We also have a rollback script: if a deployment goes wrong, it re-imports the
+previous Git commit's state in one command. Because Git is the source of truth,
+'undo' is just 'deploy the previous commit'."
+
+================================================================================
+PART 8 — TESTING & STATUS       (12:45 - 13:30)   [CUT IF SHORT ON TIME]
+================================================================================
+
+>> SAY:
+"On quality: the project has an automated test suite covering the export
+transformation, the ID re-mapping logic, and the mock server endpoints, and it
+all passes. Blueprints and workflows are fully implemented; the design is
+deliberately extensible to other object types like policies and tasks."
+
+================================================================================
+PART 9 — CLOSE                  (13:30 - 14:00)
+================================================================================
+
+[SLIDE: one-line summary + "Thank you / Questions"]
+
+>> SAY:
+"To summarise: ATLAS turns manual, unreviewed, unrecoverable infrastructure
+clicking into a reviewed, version-controlled, automated pipeline — and it solves
+the hard cross-environment ID problem with a clean two-way translation. Thank
+you. I'm happy to take questions."
+
+================================================================================
+ANTICIPATED QUESTIONS  (keep answers to 2-3 sentences)
+================================================================================
+
+Q: "You used a mock — does it actually work with real Morpheus?"
+A: "Yes. Every call goes through one client module, so switching to real
+   Morpheus is a single URL change in the config. The mock copies the real
+   Morpheus API's paths, auth, and response shapes exactly."
+
+Q: "What happens if a name isn't in the mapping file?"
+A: "The importer refuses and prints a clear error naming the missing entry,
+   instead of silently deploying to the wrong cloud. A wrong ID would be a
+   dangerous silent failure, so we made it a hard stop."
+
+Q: "How is import safe to run twice?"
+A: "It's idempotent — it matches by name, so a second run updates the existing
+   object instead of creating a duplicate. And dry-run lets you preview first."
+
+Q: "How do you detect someone editing Morpheus directly in the GUI?"
+A: "The drift job exports the live state, normalises it the same way as a
+   Git export, and diffs the two. Any difference fails the job and alerts."
+
+Q: "Why YAML and not just the raw JSON from the API?"
+A: "YAML is human-readable and review-friendly in a Merge Request, and we strip
+   environment-specific fields so the same file is portable across DEV/TEST/PROD."
+
+Q: "What was the hardest part?"
+A: "The object-ID portability problem — making one file work across three
+   environments that all use different internal ID numbers."
+
+================================================================================
+PRE-FLIGHT CHECKLIST (do this 5 minutes before you present)
+================================================================================
+[ ] Terminal 1: mock server started and showing "running at http://localhost:5000"
+[ ] Terminal 2: in the project folder, virtual environment working
+[ ] Run the 5 demo commands once beforehand so output is warm and you've seen it
+[ ] Backup slide with pre-captured demo output is ready (the safety net)
+[ ] Font size in both terminals is large enough to read from the back
+[ ] Close email/chat notifications; full-screen the terminals
+================================================================================

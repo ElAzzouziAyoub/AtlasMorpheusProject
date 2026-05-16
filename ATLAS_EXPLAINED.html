@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATLAS Explained — samples, exporter, importer, morpheus_client</title>
+<style>
+  :root {
+    --bg: #0d1117; --card: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #9da7b3; --accent: #58a6ff;
+    --green: #3fb950; --orange: #d29922; --pink: #db61a2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.65; font-size: 16px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 2rem; border-bottom: 2px solid var(--border); padding-bottom: .4em; }
+  h2 {
+    font-size: 1.5rem; margin-top: 2.4em; color: var(--accent);
+    border-bottom: 1px solid var(--border); padding-bottom: .3em;
+  }
+  h3 { font-size: 1.15rem; margin-top: 1.8em; color: var(--text); }
+  p, li { color: var(--text); }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  code {
+    background: #1f2630; padding: 2px 6px; border-radius: 4px;
+    font-family: "SF Mono", Consolas, monospace; font-size: .88em; color: #79c0ff;
+  }
+  pre {
+    background: #010409; border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; overflow-x: auto; font-size: .85rem; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: #c9d1d9; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 22px; margin: 18px 0;
+  }
+  .analogy {
+    border-left: 4px solid var(--orange); background: #1c1a12;
+    padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0;
+  }
+  .analogy strong { color: var(--orange); }
+  .note {
+    border-left: 4px solid var(--accent); background: #11202e;
+    padding: 12px 18px; border-radius: 0 8px 8px 0; margin: 16px 0;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: .92rem; }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+  th { background: #1f2630; color: var(--accent); }
+  ol.steps { counter-reset: step; list-style: none; padding-left: 0; }
+  ol.steps > li {
+    counter-increment: step; position: relative;
+    padding: 10px 0 10px 52px; border-bottom: 1px dashed var(--border);
+  }
+  ol.steps > li:last-child { border-bottom: none; }
+  ol.steps > li::before {
+    content: counter(step); position: absolute; left: 0; top: 10px;
+    width: 32px; height: 32px; background: var(--accent); color: #0d1117;
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-weight: 700;
+  }
+  .flow {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    justify-content: center; margin: 20px 0; font-size: .9rem;
+  }
+  .flow .box {
+    background: #1f2630; border: 1px solid var(--border);
+    padding: 10px 14px; border-radius: 8px; text-align: center;
+  }
+  .flow .arrow { color: var(--accent); font-size: 1.4rem; }
+  .tag { font-size: .75rem; color: var(--muted); display: block; }
+  .filechip {
+    display: inline-block; background: #11202e; border: 1px solid var(--accent);
+    color: var(--accent); padding: 1px 8px; border-radius: 12px;
+    font-size: .8rem; font-family: monospace;
+  }
+  .green { color: var(--green); }
+  .pink { color: var(--pink); }
+  footer { margin-top: 60px; color: var(--muted); font-size: .85rem; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>ATLAS, explained from the ground up</h1>
+<p class="lead">What the <code>samples/</code> folder is, what <code>morpheus_client.py</code> does,
+and exactly what happens — step by step — when you run the exporter and the importer.</p>
+
+<div class="note">
+<strong>The big picture in one sentence:</strong> ATLAS copies infrastructure definitions
+<em>out of</em> Morpheus into plain Git files (export), and pushes those files <em>back into</em>
+Morpheus (import) — and the <code>samples/</code> folder lets you do all of this with a fake
+Morpheus so you never need real credentials.
+</div>
+
+<div class="flow">
+  <div class="box">Morpheus<br>(real or mock)<span class="tag">the server</span></div>
+  <div class="arrow">⇄</div>
+  <div class="box">morpheus_client.py<span class="tag">the phone line</span></div>
+  <div class="arrow">⇄</div>
+  <div class="box">export.py / importer.py<span class="tag">the translators</span></div>
+  <div class="arrow">⇄</div>
+  <div class="box">environments/*.yml<span class="tag">Git</span></div>
+</div>
+
+<!-- ============================================================ -->
+<h2>1. The <code>samples/</code> folder — a fake Morpheus</h2>
+
+<p>The real Morpheus is a big server with a REST API. You'd normally need a URL, an account,
+and an API token to talk to it. ATLAS is <strong>mock-first</strong>: instead of a real server,
+a small Flask app (<span class="filechip">mock_server/app.py</span>) <em>pretends</em> to be
+Morpheus by reading these four JSON files and serving them at the exact same API addresses
+the real Morpheus uses.</p>
+
+<div class="analogy">
+<strong>Analogy:</strong> <code>samples/</code> is a <em>stunt double</em> for the real Morpheus
+server. It says the same lines and stands in the same places, so you can rehearse the whole
+movie (export → Git → import) without putting the real actor at risk — or needing their phone number.
+</div>
+
+<table>
+<tr><th>File</th><th>What's inside</th><th>Served by the mock at</th></tr>
+<tr><td><code>clouds_list.json</code></td><td>3 "clouds" (data centers): <code>DEV-Nutanix</code> (id&nbsp;3), <code>TEST-VMware</code> (id&nbsp;7), <code>PROD-VMware</code> (id&nbsp;12)</td><td><code>/api/zones</code></td></tr>
+<tr><td><code>networks_list.json</code></td><td>3 networks: <code>DEV-VLAN-100</code> (id&nbsp;17), <code>TEST-VLAN-200</code> (id&nbsp;23), <code>PROD-VLAN-300</code> (id&nbsp;31)</td><td><code>/api/networks</code></td></tr>
+<tr><td><code>blueprints_list.json</code></td><td>2 server templates: <code>ubuntu-web-server</code> (id&nbsp;1), <code>nginx-lb</code> (id&nbsp;2)</td><td><code>/api/blueprints</code></td></tr>
+<tr><td><code>workflows_list.json</code></td><td>2 task sets: <code>provision-web-server</code> (id&nbsp;5), <code>decommission-cleanup</code> (id&nbsp;6)</td><td><code>/api/task-sets</code></td></tr>
+</table>
+
+<p>A <strong>blueprint</strong> is a recipe for a machine ("an Ubuntu box, on this cloud, on this
+network, this size"). A <strong>workflow</strong> is a list of scripts to run on that machine
+(install nginx, configure firewall…). Clouds and networks are the infrastructure the blueprint
+points at — ATLAS only <em>reads</em> those, never changes them.</p>
+
+<div class="note">
+<strong>Subtle but important:</strong> the mock keeps an <em>in-memory</em> copy of the data
+(<code>_store</code> in <code>app.py</code>). So while the server is running, a <code>create</code>
+or <code>update</code> really does change what the next request sees — that's why import actually
+"works". But restart the server and it reloads the pristine JSON files. The files on disk are
+never modified.
+</div>
+
+<!-- ============================================================ -->
+<h2>2. <code>morpheus_client.py</code> — the single phone line</h2>
+
+<p>Every script (<code>export.py</code>, <code>importer.py</code>, <code>drift_detect.py</code>)
+needs to talk to Morpheus. None of them call the network directly. They all go through this one
+module. That's the whole trick behind mock-first.</p>
+
+<div class="analogy">
+<strong>Analogy:</strong> it's a <em>universal phone line</em>. The scripts don't know or care
+whether the call is going to the real Morpheus or the stunt double — they just say "list the
+blueprints." You change <em>who answers</em> by swapping one setting; the scripts never change.
+</div>
+
+<h3>How it decides who to call</h3>
+<pre><code>MORPHEUS_URL   = http://localhost:5000     # → the mock
+MORPHEUS_URL   = https://morpheus.company.com   # → the real thing
+MORPHEUS_TOKEN = anything-non-empty        # mock accepts any Bearer token</code></pre>
+<p>Both are read from the <code>.env</code> file at the project root
+(<code>load_dotenv</code>, top of the file). If either is missing it raises a clear error
+instead of failing mysteriously.</p>
+
+<h3>What's in it</h3>
+<table>
+<tr><th>Layer</th><th>Functions</th><th>Job</th></tr>
+<tr><td>Private plumbing</td><td><code>_get</code> <code>_post</code> <code>_put</code></td><td>Build the URL, attach the <code>Bearer</code> token header, set a 30s timeout, and raise on any HTTP error (<code>raise_for_status</code>).</td></tr>
+<tr><td class="green">Blueprints</td><td><code>list_blueprints</code> <code>get_blueprint</code> <code>create_blueprint</code> <code>update_blueprint</code></td><td>Read/write the machine recipes.</td></tr>
+<tr><td class="pink">Workflows</td><td><code>list_workflows</code> <code>get_workflow</code> <code>create_workflow</code> <code>update_workflow</code></td><td>Read/write the task sets (Morpheus calls these "task-sets").</td></tr>
+<tr><td>Infrastructure</td><td><code>list_clouds</code> <code>list_networks</code></td><td><em>Read-only.</em> Used to translate IDs ↔ names.</td></tr>
+</table>
+
+<p>One detail worth knowing: <code>list_blueprints</code> and <code>list_workflows</code>
+<strong>auto-handle pagination</strong>. Morpheus returns results in pages of 100; these
+functions loop, bumping <code>offset</code>, until they've collected everything. The rest of
+the code just gets one clean list.</p>
+
+<!-- ============================================================ -->
+<h2>3. The Exporter — Morpheus ➜ Git, step by step</h2>
+<p><span class="filechip">scripts/export.py</span> &nbsp;·&nbsp; run as
+<code>python scripts/export.py --env dev</code></p>
+
+<p>Its goal: pull the live blueprints out and write them as <strong>portable</strong> YAML —
+portable meaning environment-specific ID numbers are swapped for stable logical names, so the
+same file can later be pushed to dev, test, or prod.</p>
+
+<ol class="steps">
+<li><strong>Read the arguments.</strong> <code>--env</code> (dev/test/prod) decides which folder to write into; <code>--type</code> can narrow to just blueprints or workflows.</li>
+<li><strong>Build the cloud lookup.</strong> Calls <code>client.list_clouds()</code> and builds <code>{3: "DEV-Nutanix", 7: "TEST-VMware", 12: "PROD-VMware"}</code> — a number→name dictionary.</li>
+<li><strong>Build the network lookup.</strong> Same idea: <code>{"network-17": "DEV-VLAN-100", …}</code>.</li>
+<li><strong>Fetch every blueprint</strong> via <code>client.list_blueprints()</code>.</li>
+<li><strong>Strip the environment junk.</strong> Top-level fields that mean nothing in another environment are removed: <code>id, owner, dateCreated, lastUpdated, resourcePermission</code>.</li>
+<li><strong>Translate IDs to names</strong> by walking <code>config → tiers → instances</code>:
+  <code>cloudId: 3</code> becomes <code>cloudName: DEV-Nutanix</code>;
+  network <code>id: network-17</code> becomes <code>name: DEV-VLAN-100</code>;
+  the plan gets a <code>_logical_name: plan-12</code> tag.</li>
+<li><strong>Write the YAML</strong> to <code>environments/dev/blueprints/&lt;name&gt;.yml</code>.</li>
+<li><strong>Do workflows too</strong> (lighter: just strip <code>id/dateCreated/lastUpdated</code> and write).</li>
+</ol>
+
+<h3>Concrete before → after</h3>
+<table>
+<tr><th>In Morpheus (<code>blueprints_list.json</code>)</th><th>In Git (<code>ubuntu-web-server.yml</code>)</th></tr>
+<tr><td><code>"cloudId": 3</code></td><td><code>cloudName: DEV-Nutanix</code></td></tr>
+<tr><td><code>"network": { "id": "network-17" }</code></td><td><code>network: { name: DEV-VLAN-100 }</code></td></tr>
+<tr><td><code>"plan": { "id": 12 }</code></td><td><code>plan: { id: 12, _logical_name: plan-12 }</code></td></tr>
+<tr><td><code>"owner", "dateCreated", "id": 1 …</code></td><td><em>(removed)</em></td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>4. The Importer — Git ➜ Morpheus, step by step</h2>
+<p><span class="filechip">scripts/importer.py</span> &nbsp;·&nbsp; run as
+<code>python scripts/importer.py --env prod --dry-run</code></p>
+
+<p>Its goal is the <strong>exact mirror</strong> of export: read the portable YAML, turn the
+logical names back into the real ID numbers <em>for the target environment</em>, then create or
+update each object in Morpheus.</p>
+
+<ol class="steps">
+<li><strong>Read the arguments.</strong> <code>--env</code> picks the target; <code>--dry-run</code> means "show me what would happen, change nothing."</li>
+<li><strong>Load the translation table</strong> for that environment: <code>config/mapping_&lt;env&gt;.yml</code>. This file says, e.g., in prod <code>DEV-Nutanix → 1</code>, while in dev it's <code>→ 3</code>.</li>
+<li><strong>Read each YAML file</strong> from <code>environments/&lt;env&gt;/blueprints/</code>.</li>
+<li><strong>Translate names back to IDs</strong> (<code>_remap_blueprint</code>):
+  <code>cloudName: DEV-Nutanix</code> → look up in mapping → <code>cloudId: 1</code>;
+  network name → <code>network-&lt;id&gt;</code>; plan logical name → real plan id.</li>
+<li><strong>Hard stop on a missing entry.</strong> If a name isn't in the mapping file, it raises
+  <code>"Cloud 'DEV-Nutanix' not found in mapping for env 'prod'"</code> and skips that file —
+  deliberately, so nothing ever gets built on the wrong cloud silently.</li>
+<li><strong>Decide create vs update (upsert).</strong> It lists what already exists in Morpheus
+  by name. Name already there → <code>update</code> (PUT). New name → <code>create</code> (POST).</li>
+<li><strong>Dry-run or do it.</strong> With <code>--dry-run</code> it only prints
+  <code>would create</code> / <code>would update</code>. Without it, it actually calls the API.</li>
+<li><strong>Repeat for workflows</strong>, then print a summary like <code>{created: 1, updated: 1, errors: 0}</code>.</li>
+</ol>
+
+<div class="analogy">
+<strong>Why two mirror halves?</strong> Export is "translate to a language everyone speaks"
+(logical names). Import is "translate into the local dialect" (this environment's ID numbers).
+The Git file in the middle is environment-agnostic, which is what lets you promote
+<code>dev → test → prod</code> with the same file and just a different mapping.
+</div>
+
+<!-- ============================================================ -->
+<h2>5. The whole round trip</h2>
+<div class="flow">
+  <div class="box">Mock Morpheus<span class="tag">samples/*.json</span></div>
+  <div class="arrow">→</div>
+  <div class="box">morpheus_client<span class="tag">list_blueprints()</span></div>
+  <div class="arrow">→</div>
+  <div class="box">export.py<span class="tag">IDs → names</span></div>
+  <div class="arrow">→</div>
+  <div class="box">Git YAML<span class="tag">portable</span></div>
+</div>
+<div class="flow">
+  <div class="box">Git YAML<span class="tag">portable</span></div>
+  <div class="arrow">→</div>
+  <div class="box">importer.py<span class="tag">names → IDs<br>(mapping_&lt;env&gt;.yml)</span></div>
+  <div class="arrow">→</div>
+  <div class="box">morpheus_client<span class="tag">create / update</span></div>
+  <div class="arrow">→</div>
+  <div class="box">Mock Morpheus<span class="tag">in-memory store</span></div>
+</div>
+
+<div class="note">
+<strong>Try it yourself</strong> (fish shell — no venv activation needed):
+<pre><code>.venv/bin/python mock_server/app.py        # terminal 1: start the stunt double
+.venv/bin/python scripts/export.py --env dev               # terminal 2
+.venv/bin/python scripts/importer.py --env prod --dry-run  # safe preview</code></pre>
+</div>
+
+<footer>
+Generated for the ATLAS / Morpheus GitOps project · open this file in any browser
+</footer>
+
+</div>
+</body>
+</html>

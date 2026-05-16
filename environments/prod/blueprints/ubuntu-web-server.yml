@@ -1,0 +1,28 @@
+config:
+  name: ubuntu-web-server
+  tiers:
+    App:
+      instances:
+      - instance:
+          instanceContext: production
+          name: ${userInitials}-ubuntu-${sequence}
+          type: ubuntu
+        networkInterfaces:
+        - network:
+            name: DEV-VLAN-100
+        plan:
+          id: 12
+          _logical_name: plan-12
+        volumes:
+        - name: root
+          rootVolume: true
+          size: 20
+          storageType: 1
+        cloudName: DEV-Nutanix
+      linkedTiers: []
+      tierIndex: 1
+  type: morpheus
+description: Standard Ubuntu 22.04 web server blueprint
+name: ubuntu-web-server
+type: morpheus
+visibility: private

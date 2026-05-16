@@ -1,0 +1,15 @@
+description: Post-provision setup for web servers
+name: provision-web-server
+tasks:
+- executeTarget: resource
+  name: install-nginx
+  order: 1
+  taskType:
+    name: Shell Script
+- executeTarget: resource
+  name: configure-firewall
+  order: 2
+  taskType:
+    name: Shell Script
+type: provision
+visibility: private
