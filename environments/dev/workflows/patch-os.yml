@@ -1,0 +1,15 @@
+description: Apply OS package updates and reboot if required
+name: patch-os
+tasks:
+- executeTarget: resource
+  name: update-packages
+  order: 1
+  taskType:
+    name: Shell Script
+- executeTarget: resource
+  name: reboot-if-needed
+  order: 2
+  taskType:
+    name: Shell Script
+type: operation
+visibility: private

@@ -95,12 +95,226 @@
       },
       "dateCreated": "2024-02-01T10:00:00Z",
       "lastUpdated": "2024-03-12T11:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "postgres-db",
+      "type": "morpheus",
+      "description": "PostgreSQL 15 primary database server with a dedicated data volume",
+      "config": {
+        "name": "postgres-db",
+        "type": "morpheus",
+        "tiers": {
+          "DB": {
+            "linkedTiers": [],
+            "tierIndex": 1,
+            "instances": [
+              {
+                "instance": {
+                  "type": "postgres",
+                  "name": "${userInitials}-pgsql-${sequence}",
+                  "instanceContext": "production"
+                },
+                "cloudId": 3,
+                "networkInterfaces": [
+                  {
+                    "network": {
+                      "id": "network-17"
+                    }
+                  }
+                ],
+                "volumes": [
+                  {
+                    "rootVolume": true,
+                    "name": "root",
+                    "size": 20,
+                    "storageType": 1
+                  },
+                  {
+                    "rootVolume": false,
+                    "name": "data",
+                    "size": 100,
+                    "storageType": 1
+                  }
+                ],
+                "plan": {
+                  "id": 12
+                }
+              }
+            ]
+          }
+        }
+      },
+      "visibility": "private",
+      "resourcePermission": {
+        "all": true
+      },
+      "owner": {
+        "id": 1,
+        "username": "admin"
+      },
+      "dateCreated": "2024-02-15T08:30:00Z",
+      "lastUpdated": "2024-03-20T13:45:00Z"
+    },
+    {
+      "id": 4,
+      "name": "redis-cache",
+      "type": "morpheus",
+      "description": "Redis 7 in-memory cache node",
+      "config": {
+        "name": "redis-cache",
+        "type": "morpheus",
+        "tiers": {
+          "Cache": {
+            "linkedTiers": [],
+            "tierIndex": 1,
+            "instances": [
+              {
+                "instance": {
+                  "type": "redis",
+                  "name": "${userInitials}-redis-${sequence}"
+                },
+                "cloudId": 3,
+                "networkInterfaces": [
+                  {
+                    "network": {
+                      "id": "network-17"
+                    }
+                  }
+                ],
+                "volumes": [
+                  {
+                    "rootVolume": true,
+                    "name": "root",
+                    "size": 20,
+                    "storageType": 1
+                  }
+                ],
+                "plan": {
+                  "id": 10
+                }
+              }
+            ]
+          }
+        }
+      },
+      "visibility": "private",
+      "owner": {
+        "id": 1,
+        "username": "admin"
+      },
+      "dateCreated": "2024-02-18T09:15:00Z",
+      "lastUpdated": "2024-03-21T10:05:00Z"
+    },
+    {
+      "id": 5,
+      "name": "windows-app-server",
+      "type": "morpheus",
+      "description": "Windows Server 2022 application host",
+      "config": {
+        "name": "windows-app-server",
+        "type": "morpheus",
+        "tiers": {
+          "App": {
+            "linkedTiers": [],
+            "tierIndex": 1,
+            "instances": [
+              {
+                "instance": {
+                  "type": "windows",
+                  "name": "${userInitials}-win-${sequence}",
+                  "instanceContext": "production"
+                },
+                "cloudId": 3,
+                "networkInterfaces": [
+                  {
+                    "network": {
+                      "id": "network-17"
+                    }
+                  }
+                ],
+                "volumes": [
+                  {
+                    "rootVolume": true,
+                    "name": "root",
+                    "size": 60,
+                    "storageType": 1
+                  }
+                ],
+                "plan": {
+                  "id": 12
+                }
+              }
+            ]
+          }
+        }
+      },
+      "visibility": "private",
+      "resourcePermission": {
+        "all": true
+      },
+      "owner": {
+        "id": 1,
+        "username": "admin"
+      },
+      "dateCreated": "2024-02-25T11:00:00Z",
+      "lastUpdated": "2024-03-22T16:20:00Z"
+    },
+    {
+      "id": 6,
+      "name": "docker-host",
+      "type": "morpheus",
+      "description": "Ubuntu Docker container host for ad-hoc workloads",
+      "config": {
+        "name": "docker-host",
+        "type": "morpheus",
+        "tiers": {
+          "Container": {
+            "linkedTiers": [],
+            "tierIndex": 1,
+            "instances": [
+              {
+                "instance": {
+                  "type": "docker",
+                  "name": "${userInitials}-docker-${sequence}"
+                },
+                "cloudId": 3,
+                "networkInterfaces": [
+                  {
+                    "network": {
+                      "id": "network-17"
+                    }
+                  }
+                ],
+                "volumes": [
+                  {
+                    "rootVolume": true,
+                    "name": "root",
+                    "size": 40,
+                    "storageType": 1
+                  }
+                ],
+                "plan": {
+                  "id": 12
+                }
+              }
+            ]
+          }
+        }
+      },
+      "visibility": "private",
+      "owner": {
+        "id": 1,
+        "username": "admin"
+      },
+      "dateCreated": "2024-03-01T08:00:00Z",
+      "lastUpdated": "2024-03-25T09:30:00Z"
     }
   ],
   "meta": {
     "offset": 0,
     "max": 25,
-    "size": 2,
-    "total": 2
+    "size": 6,
+    "total": 6
   }
 }

@@ -1,0 +1,28 @@
+config:
+  name: windows-app-server
+  tiers:
+    App:
+      instances:
+      - instance:
+          instanceContext: production
+          name: ${userInitials}-win-${sequence}
+          type: windows
+        networkInterfaces:
+        - network:
+            name: DEV-VLAN-100
+        plan:
+          id: 12
+          _logical_name: plan-12
+        volumes:
+        - name: root
+          rootVolume: true
+          size: 60
+          storageType: 1
+        cloudName: DEV-Nutanix
+      linkedTiers: []
+      tierIndex: 1
+  type: morpheus
+description: Windows Server 2022 application host
+name: windows-app-server
+type: morpheus
+visibility: private

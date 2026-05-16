@@ -1,0 +1,32 @@
+config:
+  name: postgres-db
+  tiers:
+    DB:
+      instances:
+      - instance:
+          instanceContext: production
+          name: ${userInitials}-pgsql-${sequence}
+          type: postgres
+        networkInterfaces:
+        - network:
+            name: DEV-VLAN-100
+        plan:
+          id: 12
+          _logical_name: plan-12
+        volumes:
+        - name: root
+          rootVolume: true
+          size: 20
+          storageType: 1
+        - name: data
+          rootVolume: false
+          size: 100
+          storageType: 1
+        cloudName: DEV-Nutanix
+      linkedTiers: []
+      tierIndex: 1
+  type: morpheus
+description: PostgreSQL 15 primary database server with a dedicated data volume
+name: postgres-db
+type: morpheus
+visibility: private

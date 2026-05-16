@@ -1,0 +1,15 @@
+description: Dump the database and upload the archive to object storage
+name: backup-database
+tasks:
+- executeTarget: resource
+  name: dump-database
+  order: 1
+  taskType:
+    name: Shell Script
+- executeTarget: resource
+  name: upload-to-storage
+  order: 2
+  taskType:
+    name: Shell Script
+type: operation
+visibility: private

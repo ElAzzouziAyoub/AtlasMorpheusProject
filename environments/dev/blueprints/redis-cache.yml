@@ -1,0 +1,27 @@
+config:
+  name: redis-cache
+  tiers:
+    Cache:
+      instances:
+      - instance:
+          name: ${userInitials}-redis-${sequence}
+          type: redis
+        networkInterfaces:
+        - network:
+            name: DEV-VLAN-100
+        plan:
+          id: 10
+          _logical_name: plan-10
+        volumes:
+        - name: root
+          rootVolume: true
+          size: 20
+          storageType: 1
+        cloudName: DEV-Nutanix
+      linkedTiers: []
+      tierIndex: 1
+  type: morpheus
+description: Redis 7 in-memory cache node
+name: redis-cache
+type: morpheus
+visibility: private

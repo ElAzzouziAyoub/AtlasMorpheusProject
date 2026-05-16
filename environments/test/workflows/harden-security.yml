@@ -1,0 +1,15 @@
+description: Apply CIS baseline and disable root SSH login
+name: harden-security
+tasks:
+- executeTarget: resource
+  name: apply-cis-baseline
+  order: 1
+  taskType:
+    name: Shell Script
+- executeTarget: resource
+  name: disable-root-ssh
+  order: 2
+  taskType:
+    name: Shell Script
+type: provision
+visibility: private

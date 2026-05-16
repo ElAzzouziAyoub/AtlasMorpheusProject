@@ -1,0 +1,27 @@
+config:
+  name: docker-host
+  tiers:
+    Container:
+      instances:
+      - instance:
+          name: ${userInitials}-docker-${sequence}
+          type: docker
+        networkInterfaces:
+        - network:
+            name: DEV-VLAN-100
+        plan:
+          id: 12
+          _logical_name: plan-12
+        volumes:
+        - name: root
+          rootVolume: true
+          size: 40
+          storageType: 1
+        cloudName: DEV-Nutanix
+      linkedTiers: []
+      tierIndex: 1
+  type: morpheus
+description: Ubuntu Docker container host for ad-hoc workloads
+name: docker-host
+type: morpheus
+visibility: private

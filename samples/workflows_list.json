@@ -51,12 +51,105 @@
       "visibility": "private",
       "dateCreated": "2024-02-10T08:00:00Z",
       "lastUpdated": "2024-03-05T09:00:00Z"
+    },
+    {
+      "id": 7,
+      "name": "patch-os",
+      "description": "Apply OS package updates and reboot if required",
+      "type": "operation",
+      "tasks": [
+        {
+          "id": 104,
+          "name": "update-packages",
+          "taskType": {
+            "id": 1,
+            "name": "Shell Script"
+          },
+          "executeTarget": "resource",
+          "order": 1
+        },
+        {
+          "id": 105,
+          "name": "reboot-if-needed",
+          "taskType": {
+            "id": 1,
+            "name": "Shell Script"
+          },
+          "executeTarget": "resource",
+          "order": 2
+        }
+      ],
+      "visibility": "private",
+      "dateCreated": "2024-02-22T08:00:00Z",
+      "lastUpdated": "2024-03-18T09:00:00Z"
+    },
+    {
+      "id": 8,
+      "name": "backup-database",
+      "description": "Dump the database and upload the archive to object storage",
+      "type": "operation",
+      "tasks": [
+        {
+          "id": 106,
+          "name": "dump-database",
+          "taskType": {
+            "id": 1,
+            "name": "Shell Script"
+          },
+          "executeTarget": "resource",
+          "order": 1
+        },
+        {
+          "id": 107,
+          "name": "upload-to-storage",
+          "taskType": {
+            "id": 1,
+            "name": "Shell Script"
+          },
+          "executeTarget": "resource",
+          "order": 2
+        }
+      ],
+      "visibility": "private",
+      "dateCreated": "2024-02-28T08:00:00Z",
+      "lastUpdated": "2024-03-19T09:00:00Z"
+    },
+    {
+      "id": 9,
+      "name": "harden-security",
+      "description": "Apply CIS baseline and disable root SSH login",
+      "type": "provision",
+      "tasks": [
+        {
+          "id": 108,
+          "name": "apply-cis-baseline",
+          "taskType": {
+            "id": 1,
+            "name": "Shell Script"
+          },
+          "executeTarget": "resource",
+          "order": 1
+        },
+        {
+          "id": 109,
+          "name": "disable-root-ssh",
+          "taskType": {
+            "id": 1,
+            "name": "Shell Script"
+          },
+          "executeTarget": "resource",
+          "order": 2
+        }
+      ],
+      "visibility": "private",
+      "dateCreated": "2024-03-02T08:00:00Z",
+      "lastUpdated": "2024-03-24T09:00:00Z"
     }
   ],
   "meta": {
     "offset": 0,
     "max": 25,
-    "size": 2,
-    "total": 2
+    "size": 5,
+    "total": 5
   }
 }
