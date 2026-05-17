@@ -16,10 +16,13 @@ import os
 import sys
 
 import yaml
+import time
+from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import scripts.morpheus_client as client
+import scripts.locking as locking
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -134,7 +137,7 @@ def _import_blueprints(env: str, in_dir: str, mapping: dict, dry_run: bool):
     bp_dir = os.path.join(in_dir, "blueprints")
     if not os.path.isdir(bp_dir):
         print("  No blueprints directory found, skipping.")
-        return
+        return {"created": 0, "updated": 0, "dry-run": 0, "errors": 0}
 
     # Build index of existing blueprints by name for upsert logic
     existing = {_bp_key(bp): bp for bp in client.list_blueprints()}
@@ -161,17 +164,20 @@ def _import_blueprints(env: str, in_dir: str, mapping: dict, dry_run: bool):
             stats["errors"] += 1
 
     print(f"  Summary: {stats}")
+    return stats
 
 
 def _import_workflows(env: str, in_dir: str, dry_run: bool):
     wf_dir = os.path.join(in_dir, "workflows")
     if not os.path.isdir(wf_dir):
         print("  No workflows directory found, skipping.")
-        return
+        return {"created": 0, "updated": 0, "dry-run": 0}
 
     existing = {wf["name"]: wf for wf in client.list_workflows()}
     yml_files = [f for f in os.listdir(wf_dir) if f.endswith(".yml")]
     print(f"  Found {len(yml_files)} workflow file(s)")
+
+    stats = {"created": 0, "updated": 0, "dry-run": 0}
 
     for fname in yml_files:
         fpath = os.path.join(wf_dir, fname)
@@ -182,15 +188,37 @@ def _import_workflows(env: str, in_dir: str, dry_run: bool):
         if dry_run:
             action = "would update" if name in existing else "would create"
             print(f"    [dry-run] {action}: {name}")
+            stats["dry-run"] += 1
             continue
 
         if name in existing:
             wf_id = existing[name]["id"]
             client.update_workflow(wf_id, wf)
             print(f"    updated: {name}")
+            stats["updated"] += 1
         else:
             client.create_workflow(wf)
             print(f"    created: {name}")
+            stats["created"] += 1
+
+    print(f"  Summary: {stats}")
+    return stats
+
+
+def _generate_documentation(env: str, bp_stats: dict, wf_stats: dict):
+    doc_path = os.path.join(REPO_ROOT, "docs", "History.md")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    if not os.path.exists(doc_path):
+        with open(doc_path, "w") as f:
+            f.write("# 🚀 Automated Deployment Log\n\n")
+            
+    with open(doc_path, "a") as f:
+        f.write(f"## [{now}] - Environment: {env.upper()}\n")
+        f.write(f"- **Blueprints:** {bp_stats.get('updated', 0)} updated, {bp_stats.get('created', 0)} created\n")
+        f.write(f"- **Workflows:** {wf_stats.get('updated', 0)} updated, {wf_stats.get('created', 0)} created\n")
+        f.write("- **Status:** Success\n\n")
+    print(f"  Documentation updated: {doc_path}")
 
 
 # ---------------------------------------------------------------------------
@@ -221,13 +249,25 @@ def main():
 
     print(f"Importing from {in_dir} → Morpheus ({args.env})")
 
-    if args.obj_type in ("all", "blueprints"):
-        print("\n[blueprints]")
-        _import_blueprints(args.env, in_dir, mapping, args.dry_run)
+    locking.acquire_lock(args.env)
 
-    if args.obj_type in ("all", "workflows"):
-        print("\n[workflows]")
-        _import_workflows(args.env, in_dir, args.dry_run)
+    bp_stats = {}
+    wf_stats = {}
+
+    try:
+        if args.obj_type in ("all", "blueprints"):
+            print("\n[blueprints]")
+            bp_stats = _import_blueprints(args.env, in_dir, mapping, args.dry_run)
+
+        if args.obj_type in ("all", "workflows"):
+            print("\n[workflows]")
+            wf_stats = _import_workflows(args.env, in_dir, args.dry_run)
+            
+    finally:
+        locking.release_lock(args.env)
+
+    if not args.dry_run:
+        _generate_documentation(args.env, bp_stats, wf_stats)
 
     print("\nImport complete.")
 
