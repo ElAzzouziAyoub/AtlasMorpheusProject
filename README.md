@@ -204,7 +204,7 @@ The GitLab pipeline (`.gitlab-ci.yml`) is divided into 4 stages:
 3. **Promote**: Import to PROD environment (on merge to `main` branch, manual approval)
 4. **Drift Detection**: Scheduled sync to detect manual GUI changes
 
-## Motivation & What I Learned
+## Motivation & What We Learned
 
 Companies that use Morpheus to manage cloud infrastructure typically do so through the GUI — clicking around to create blueprints, configure workflows, and set policies. When they want the same configuration in a TEST or PROD environment, they click it all again. There is no history of who changed what, no review process, and no way to roll back.
 
@@ -222,4 +222,4 @@ Distributed under the MIT License. See [LICENSE](./LICENSE) for details.
 ## Author
 
 **Yasser BAOUZIL**
-**Ayoub EL AZZOUZI**
+**-&-Ayoub EL AZZOUZI**
